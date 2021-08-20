@@ -11,7 +11,7 @@
 
 
 
-<title>Generel info om Statistisk Dataanalyse 1 (version 2021/2022)</title>
+<title>Generel info om Statistisk Dataanalyse 1</title>
 
 <script src="site_libs/header-attrs-2.10/header-attrs.js"></script>
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
@@ -244,7 +244,13 @@ $(document).ready(function () {
         <li>
   <a href="index.html">Praktiske oplysninger</a>
 </li>
-<li class="dropdown-header">Kursusplan</li>
+<li>
+  <a href="kursusplan.html">Kursusplan</a>
+</li>
+<li class="dropdown-header">Slides</li>
+<li class="dropdown-header">R</li>
+<li class="dropdown-header">Data</li>
+<li class="dropdown-header">Opgaver</li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         
@@ -257,13 +263,233 @@ $(document).ready(function () {
 
 
 
-<h1 class="title toc-ignore">Generel info om Statistisk Dataanalyse 1 (version 2021/2022)</h1>
+<h1 class="title toc-ignore">Generel info om Statistisk Dataanalyse 1</h1>
 
 </div>
 
+<div id="TOC">
+<ul>
+<li><a href="#praktiske-oplysninger-om-undervisningen">Praktiske oplysninger om undervisningen</a>
+<ul>
+<li><a href="#kursusansvarlig-og-forelæser">Kursusansvarlig og forelæser</a></li>
+<li><a href="#instruktorer">Instruktorer</a></li>
+<li><a href="#skema-ugestruktur">Skema / Ugestruktur</a></li>
+<li><a href="#plan-over-kursusaktiviteter">Plan over kursusaktiviteter</a></li>
+<li><a href="#indhold">Indhold</a></li>
+<li><a href="#forudsætninger">Forudsætninger</a></li>
+<li><a href="#feedback">Feedback</a></li>
+</ul></li>
+<li><a href="#om-undervisningen">Om undervisningen</a>
+<ul>
+<li><a href="#undervisningsmateriale">Undervisningsmateriale</a></li>
+<li><a href="#forelæsninger">Forelæsninger</a></li>
+<li><a href="#øvelsestimer">Øvelsestimer</a></li>
+<li><a href="#afleveringsopgaver">Afleveringsopgaver</a></li>
+<li><a href="#hjemmearbejde">Hjemmearbejde</a></li>
+<li><a href="#r-programmer-og-datasæt">R programmer og datasæt</a></li>
+</ul></li>
+</ul>
+</div>
 
 <hr />
-<p>Velkommen</p>
+Velkommen til kurset
+<h2>
+Statistisk Dataanalyse 1 (version 2021/2022)
+</h2>
+<p>De vigtigste oplysninger findes både på kursets Absalon-side og på kursets eksterne kursushjemmeside. Det er dog i høj grad kursushjemmesiden, som vil blive brugt til distribution af kursusmateriale.</p>
+<p>Vær opmærksom på følgende vigtige links</p>
+<ul>
+<li>Kursets <a href="https://kurser.ku.dk/course/lmab10069u/2021-2022">officielle kursusbeskrivelse</a></li>
+<li>Kursets eksterne <a href="https://anderstolver.github.io/StatData1_2021/index.html">hjemmeside</a></li>
+</ul>
+<hr />
+<div id="praktiske-oplysninger-om-undervisningen" class="section level1">
+<h1>Praktiske oplysninger om undervisningen</h1>
+<div id="kursusansvarlig-og-forelæser" class="section level2">
+<h2>Kursusansvarlig og forelæser</h2>
+<p>Forelæsninger, kursusplanlægning og eksamen varetages af: Anders Tolver (<a href="mailto:tolver@math.ku.dk" class="email">tolver@math.ku.dk</a>)</p>
+<hr />
+</div>
+<div id="instruktorer" class="section level2">
+<h2>Instruktorer</h2>
+<p>Der er tilknyttet 5 instruktorer (hjælpelærere) til kurset</p>
+<ul>
+<li>Emil Ellegaard (<a href="mailto:wtm418@alumni.ku.dk" class="email">wtm418@alumni.ku.dk</a>)</li>
+<li>Frederik Fabricius-Bjerre (<a href="mailto:vxl334@alumni.ku.dk" class="email">vxl334@alumni.ku.dk</a>)</li>
+<li>Jens Baalkilde Andersen (<a href="mailto:ldj472@alumni.ku.dk" class="email">ldj472@alumni.ku.dk</a>)</li>
+<li>Mads Øhlenschlæger Heller (<a href="mailto:fpg820@alumni.ku.dk" class="email">fpg820@alumni.ku.dk</a>)</li>
+<li>Tobias Strømgren (<a href="mailto:tst@math.ku.dk" class="email">tst@math.ku.dk</a>)</li>
+</ul>
+<hr />
+</div>
+<div id="skema-ugestruktur" class="section level2">
+<h2>Skema / Ugestruktur</h2>
+<p>Mandag</p>
+<ul>
+<li>13:00-14:45: forelæsninger af Anders Tolver i aud-A2-82.01</li>
+<li>15:00-16:45: regneøvelser med hjælpelærer</li>
+</ul>
+<p>Onsdag</p>
+<ul>
+<li>10:00-11:45: forelæsninger af Anders Tolver i aud-A2-82.01</li>
+<li>13:00-15:45: regneøvelser med hjælpelærer</li>
+</ul>
+<p>Derudover uploades hver uge en video af op til 45 minutters varighed, som du forventes at se i løbet af ugen. Det tilstræbes at denne video er til rådighed onsdag kl. 16:00.</p>
+<hr />
+</div>
+<div id="plan-over-kursusaktiviteter" class="section level2">
+<h2>Plan over kursusaktiviteter</h2>
+<p>For en detaljeret plan over kursusaktiviteter henvises til følgende <a href="https://anderstolver.github.io/StatData1_2021/kursusplan.html">kursusplan</a>.</p>
+<!--
+
+Detaljerne i kursusplanen for den kommende uge annonceres som udgangspunkt torsdag eftermiddag. Jeg vurderer løbende hvordan kurset skrider frem , og det er derfor ikke muligt at lave en detaljeret plan for hele kurset fra starten. Der kommer en grov foreløbig oversigt over kurset omkring blokstart.
+
+-->
+<hr />
+</div>
+<div id="indhold" class="section level2">
+<h2>Indhold</h2>
+<p>Der henvises igen til kursus eksterne hjemmeside og til den officielle kursusbeskrivelse for mere information.</p>
+<p>Vigtige emner på kurset er</p>
+<ul>
+<li>Statistiske grundbegreber: Sandsynligheder, variation, statistisk model, estimation, test, konfidensintervaller</li>
+<li>Analyser baseret på normalfordelingen: Sammenligning af stikprøver, en- og tosidet variansanalyse, regressionsanalyse</li>
+<li>Analyser af diskrete data: Binomialfordelingen, tosidede antalstabeller</li>
+</ul>
+<p>Der lægges vægt på “oversættelse” fra biologiske problemstillinger til statistisk formulering og analyse, samt på fortolkning af resultaterne.</p>
+<p>Beregninger gennemføres i simple tilfælde med lommeregner, men som hovedregel ved brug af det statistiske program R - også ved eksamen.</p>
+<hr />
+</div>
+<div id="forudsætninger" class="section level2">
+<h2>Forudsætninger</h2>
+<p>Kurset forudsætter kurset Matematik og databehandling eller lignende. Specifkt forudsættes kendskab til R, således at vi ikke starter forfra med R. Hvis din baggrund er anderledes således at du ikke kender R, må du insdstille dig på ekstra arbejde i starten af kurset.</p>
+<hr />
+</div>
+<div id="feedback" class="section level2">
+<h2>Feedback</h2>
+<p>Hvis der er problemer i løbet af kurset, så sig til i løbet af kurset i stedet for at vente til evalueringen. Forhåbentlig kan vi så løse problemerne mens kurset kører.</p>
+<hr />
+</div>
+</div>
+<div id="om-undervisningen" class="section level1">
+<h1>Om undervisningen</h1>
+<div id="undervisningsmateriale" class="section level2">
+<h2>Undervisningsmateriale</h2>
+<p>Vi benytter os af lærebogen</p>
+<ul>
+<li>Claus Thorn Ekstrøm &amp; Helle Sørensen: <strong>Statistical Data Analyse for the Life Sciences (Second Edition)</strong></li>
+</ul>
+<p>Det gennemgåede pensum dækkes i grove træk af indholdet kapitel 1-7, dele af kapitel 8, kapitel 10-12 og kapitel 14. En mere detaljeret pensumliste laves løbende som kurset skrider frem.</p>
+<p>Du vil i lige så høj grad komme til at opleve, at vi trækker på følgende undervisningsmateriale</p>
+<ul>
+<li>forelæsningsslides (evt. videoer)</li>
+<li>opgaver og opgaveløsninger</li>
+<li>R programmer</li>
+</ul>
+<hr />
+</div>
+<div id="forelæsninger" class="section level2">
+<h2>Forelæsninger</h2>
+<!--
+Forelæsningerne bliver ikke en slavisk gennemgang af stoffet i bogen. Jeg vil i stedet forsøge at fokusere på ideer, fortolkninger, praksis og forståelse.
+
+Der vil være derfor være mange ting i bogen, der ikke bliver gennemgået. Det betyder ikke at de ikke er vigtige, og I forventes at læse dem selv derhjemme. I er altid velkomne til at stille spørgsmål til dem. 
+
+Ved forelæsningerne benyttes forelæsningsslides der gøres tilgængelige umiddelbart før forelæsningen. Desuden vil alle forelæsninger bliver livestreamet og optagelser af forelæsningen vil blive lagt ud på Absalon / kursushjemmesiden. Udgangspunktet er, at man *møder op* til forelæsninger og er tilstede live enten fysisk eller online. De må regnes som en ekstraordinær service, at forelæsningerne optages, og der kan være praktiske eller didaktiske årsager til, at jeg vælger at lægge optagelser af forelæsninger med en vis forsinkelse.
+-->
+<hr />
+</div>
+<div id="øvelsestimer" class="section level2">
+<h2>Øvelsestimer</h2>
+<!--
+Ved øvelsestimerne sidder I og regner de opgaver der er annonceret på ugeplanen. Der er instruktorer der kan hjælpe jer, og I er velkomne til at spørge om alt hvad der har med kurset at gøre. Enkelte opgaver vil blive gennemgået ved tavlen eller online til alle på holdet, hvis der er behov.
+
+Der vil ikke være tid til at regne alle opgaver i løbet af øvelsestimerne, og de vil ikke alle blive gennemgået. Resten er hjemmearbejde, og det er dit eget ansvar at få fulgt op på opgaverne. 
+-->
+<hr />
+</div>
+<div id="afleveringsopgaver" class="section level2">
+<h2>Afleveringsopgaver</h2>
+<p>Der vil blive stillet en afleveringsopgave et par gange i løbet af kurset. Det er frivilligt at aflevere, men det er et rasende godt tilbud og en fremragende mulighed for at få feedback på din skriftlige fremstilling af besvarelsen.</p>
+<hr />
+</div>
+<div id="hjemmearbejde" class="section level2">
+<h2>Hjemmearbejde</h2>
+<!--
+Udover de skemalagte timer skal du naturligvis arbejde intensivt med stoffet på egen hånd. Undervisningen (skal) tilrettelægges, så et fuldtidsstudie kræver, at du bruger mindst 40 timer om ugen på dit studie (heraf mindst 20 timer på Statistik Dataanalyse). Hvis du bruger mindre end 20 timer om uger, så kan du ikke forvente at få et fornuftigt udbytte af kurset, og din præstation ved eksamen vil være dårligere, end den behøvede at være. Det er naturligvis meget forskelligt fra person til person hvordan denne tid bedst fordeles på de forskellige kursuselementer, men et løst forslag er følgende:
+
+* Forelæsninger (fysisk / online): 5 timer
+* Øvelsestimer (fysisk eller med online adgang til hjælpelærer): 5 timer 
+* Læse i bogen før og efter forelæsninger: 4 timer
+* Selvstændigt arbejde med opgaver, slides, R programmer m.m. (før/efter timer): 6 timer
+-->
+<hr />
+</div>
+<div id="r-programmer-og-datasæt" class="section level2">
+<h2>R programmer og datasæt</h2>
+<p>Det er et vigtigt element i undervisningen, at du selv lærer at bruge det statistiske program R til at lave statistiske beregninger.</p>
+<p>R og RStudio vil blive benyttet på kurset, dels til egentlig datanalyse og dels til små simulationsstudier. R er et statistikprogram, RStudio er en brugergrænseflade som gør arbejdet med R (endnu) mere behageligt.</p>
+<p>Sørg for at have installeret de nyeste versioner af R og RStudio på din computer ved kursusstart og hav din laptop med til øvelserne. Der er en lang række hyppige problemer som lettest løses ved at opdatere R og RStudio til nyeste versioner, så lad være med at falde for fristelsen og køre med (old)gamle versioner.</p>
+<p>Links til installation:</p>
+<p>Du skal først installere R: <a href="http://www.r-project.org/">www.r-project.org/</a></p>
+<ul>
+<li>klik CRAN i venstre bjælke og vælg et mirror i Danmark</li>
+<li>vælg operativsystem</li>
+<li>følg vejledningen (brug defaultindstillingerne)</li>
+</ul>
+<p>Dernæst skal du installere RStudio: <a href="http://www.rstudio.com/">www.rstudio.com</a></p>
+<ul>
+<li>Vælg “RStudio Desktop” (gratis)</li>
+</ul>
+<p>Hvis du allerede har RStudio installeret, så kan programmet også updateres inde fra RStudio</p>
+<ul>
+<li>vælg <code>Help</code> i menuen og derefter <code>Check for updates</code></li>
+</ul>
+<!--
+
+Jeg vil selv bruge filformatet `R Markdown` i løbet af kurset. Det er et format, hvor man nemt kan integrere (dvs. kombinere) R-kode, R-output, grafer og almindelig tekst, og få resultatet vist som pdf, html eller MS Word. Jeg vil opfordre jer kraftigt til selv at vænne jer til at benytte dette format. Jeg viser hvordan man gør i kursusuge 1, og alle mine R programmer vil være skrevet i dette format.
+
+
+I forbindelse med forelæsninger, øvelser og eksamen vil i skulle indlæse og regne på et større antal datasæt. 
+ 
+Alle datasæt, som optræder i lærebogen kan downloades ved at installere R-pakken `isdals` fra CRAN.
+
+Øvrige datasæt vil blive uploaded til en særlig folder på [kursets eksterne hjemmeside](https://anderstolver.github.io/StatData1_2020/index.html).
+
+-->
+<hr />
+<!--
+
+# Eksamen
+
+Jeg har modtaget en e-mail fra eksamensteamet på KU-SCIENCE om, at den skriftlige eksamen på Statistisk Dataanalyse 1 er flyttet til d. 11/11-2020. Alle studerende burde også have modtaget denne information direkte. Det er *ikke* en beslutning jeg som underviser har indflydelse på. Jeg har heller intet at gøre med tilmelding eller framelding til eksamen, så her skal I skrive direkte til eksamensteamet.
+
+Den skriftlige eksamen er en 4 timers ITX eksamen. Her kan du se de [operationelle retningslinjer for ITX-prøver i KU's eksamenshus](https://kunet.ku.dk/arbejdsomraader/undervisning/udvikling/undervisningsportfolio/documents/itx%20retningslinjer.pdf).
+
+**Bemærk:** Der er givet dispensation, så du selv må vælge, om du vil arbejde på din egen medbragte computer eller om du vil benytte dig af ITX-computeren ved dit eksamensbord. Dog er det et krav, at du afleverer din besvarelse digitalt som en pdf-fil via ITX-computeren. 
+
+Husk, at du *IKKE* må skrive navn på din besvarelse, men at du skal anføre dit eksamensnummer. I princippet må du selv bestemme, hvilke programmer du bruger til at lave pdf-filen med din eksamensbesvarelse. Jeg har tidligere udsendt en e-mail, hvor jeg diskuterer 3 forskellige metoder til at lave en pdf-fil ud fra en R Markdown fil. 
+
+Alle hjælpemidler tilladt inklusive brug af R på egen medbragte computer. Dele af opgaven kan ikke løses uden brug af R. Der vil sammen med eksamensopgaver også blive givet adgang til datasæt, som skal benyttes i forbindelse med besvarelse af eksamensopgaven.
+
+To vigtige ting
+
+* Man selv skal køre R ved eksamen. Til og med 2016 var den nødvendige kode og output givet i opgaven, så ældre eksamenssæt ikke er helt repræsentative for nye sæt, men problemstillinger og spørgsmål vil være af samme type.
+* En del af eksamenssættet vil bestå af quizspørgsmål (*multiple choice*). Vi vil træne dette vha. små quizzer undervejs i undervisningsforløbet.
+
+Det er jeres eget ansvar at holde jer orienteret om
+
+* frister for til- og afmelding til eksamen (jeg hverken må eller kan hjælpe)
+* tid og sted for den skriftlige eksamen
+
+
+## Notat med info og gode råd om eksamen
+
+Supplerende info og gode råd om eksamen findes i følgende [notat om eksamen](notater/om-eksamen.pdf).
+
+-->
+</div>
+</div>
 
 
 

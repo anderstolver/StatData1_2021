@@ -6,3 +6,8 @@ navbar:
     - text: "Praktiske oplysninger"
       href: index.html
     - text: "Kursusplan"
+      href: kursusplan.html
+    - text: "Slides"
+    - text: "R"
+    - text: "Data"
+    - text: "Opgaver"
