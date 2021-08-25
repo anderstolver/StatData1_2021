@@ -11,7 +11,7 @@
 
 
 
-<title>Kursusplan</title>
+<title>Liste over dataset</title>
 
 <script src="site_libs/header-attrs-2.10/header-attrs.js"></script>
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
@@ -291,121 +291,112 @@ $(document).ready(function () {
 
 
 
-<h1 class="title toc-ignore">Kursusplan</h1>
+<h1 class="title toc-ignore">Liste over dataset</h1>
 
 </div>
 
 <div id="TOC">
 <ul>
-<li><a href="#oversigt-over-undervisningen">Oversigt over undervisningen</a>
+<li><a href="#data">Data</a>
 <ul>
-<li><a href="#liste-over-gennemgået-pensum">Liste over gennemgået pensum</a></li>
-</ul></li>
-<li><a href="#program-for-enkelte-uger">Program for enkelte uger</a>
+<li><a href="#data-fra-eksempler-og-opgaver-i-lærebogen">Data fra eksempler og opgaver i lærebogen</a></li>
+<li><a href="#øvrige-data">Øvrige data</a>
 <ul>
-<li><a href="#uge1">Kursusuge 1</a>
-<ul>
-<li><a href="#generel-info">Generel info</a></li>
+<li><a href="#regneøvelser">Regneøvelser</a></li>
+<li><a href="#gamle-eksamensopgaver">Gamle eksamensopgaver</a></li>
 <li><a href="#forelæsninger">Forelæsninger</a></li>
-<li><a href="#øvelsestimer">Øvelsestimer</a></li>
 </ul></li>
 </ul></li>
 </ul>
 </div>
 
-<div id="oversigt-over-undervisningen" class="section level1">
-<h1>Oversigt over undervisningen</h1>
-<p>Skemaet giver en grov foreløbig plan for undervisningen. Planen og linket (til højre for hver kursusdag) med detaljerede oplysninger opdateres løbende for hver enkelt undervisningsgang.</p>
-<table>
-<thead>
-<tr class="header">
-<th>Kursusuge</th>
-<th>Dag</th>
-<th>Emner</th>
-<th>Lærebog</th>
-<th>Detaljer</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>1</td>
-<td>Mandag (6/9)</td>
-<td>Introduktion, R, Deskriptiv statistik</td>
-<td>Ch. 1</td>
-<td><a href="#uge1">link</a></td>
-</tr>
-<tr class="even">
-<td>1</td>
-<td>Onsdag (8/9)</td>
-<td>Intro til lineær regression og ensidet ANOVA</td>
-<td>Ch. 2-3</td>
-<td><a href="#uge1">link</a></td>
-</tr>
-</tbody>
-</table>
-<div id="liste-over-gennemgået-pensum" class="section level2">
-<h2>Liste over gennemgået pensum</h2>
-<p>Følgende afsnit fra lærebogen er gennemgået</p>
+<div id="data" class="section level1">
+<h1>Data</h1>
+<p>På denne side findes en liste over de datasæt, som har været benyttet i forbindelse med undervisningen på Statistisk Dataanalyse 1 (2021/2022).</p>
+<div id="data-fra-eksempler-og-opgaver-i-lærebogen" class="section level2">
+<h2>Data fra eksempler og opgaver i lærebogen</h2>
+<p>De fleste datasæt som benyttes i lærebogen findes i <code>isdals</code> R-pakken.</p>
 <!--
-
-* Chapter 1: Datatyper, visualisering og deskriptiv statistik
-
-* Chapter 2: Introduktion til lineær regression
-
-* Chapter 3: Sammenligning af grupper og introduktion til ensidet variansanalyse.
-
-
-* Chapter 4: Normalfordelingen. Nogle af de mere teoretiske ting omkring Infobox 4.2, 4.3 og 4.5 illustreres primært gennem eksempler (computersimulationer). Afsnit 4.4. er kun kursorisk. 
-
-* Chapter 5.3.1-5.3.3: Konfidensintervaller med fokus på konstruktion af konfidensintervaller for middelværdien i en sample (*one sample problem*)
-
-* Chapter 5.1-5.2: Generelle statistisk begreber (statistisk model, estimation) med fokus på lineær regression og ensidet ANOVA.
-
-* Chapter 6.1-6.2: Hypotesetest med særlig fokus på t-test.
-
-* Chapter 6.3-6.4: Om F-test med udgangspunkt i sammensatte hypoteser (flere grupper på en gang) i ensidet ANOVA
-
-* Chapter 6.5: Om fejl af type I og II i forbindelse med hypotesetest
-
-* Chapter 7: Modelkontrol og prædiktion i forbindelse med modeller fittet med `lm()` funktionen i R
-
-* Chapter 8.1: Multipel lineær regression
-
-* Chapter 8.2, 8.3, 8.4.1, 8.4.2: Om tosidet ANOVA og blandede modeller (både kontinuerte og kategoriske forklarende variable). Afsnittene 8.2.2 og 8.4.3 er ikke pensum.
-
-* Chapter 11: Om binomialfordelingen
-
-* Chapter 12: Om analyse af antalstabeller (dog ikke afsnit 12.2.3 og 12.2.4)
-
+Du kan læse mere om, hvordan du downloader og bruger data fra `isdals` R-pakken i [Opgave HS. 2](opgaver/hs1-4.pdf).
 -->
 </div>
+<div id="øvrige-data" class="section level2">
+<h2>Øvrige data</h2>
+<div id="regneøvelser" class="section level3">
+<h3>Regneøvelser</h3>
+<p>Følgende datasæt har desuden været benyttet ved regneøvelserne</p>
+<!--
+* Opgave HS.9: [johnson-fatpct.txt](data/johnson-fatpct.txt) - [johnson-fatpct.xlsx](data/johnson-fatpct.xlsx)
+* Opgave HS.11+HS.15+HS.31: [punktplot2017.txt](data/punktplot2017.txt) - [punktplot2017.xlsx](data/punktplot2017.xlsx)
+* Opgave HS.13: [sudoku-sd1.txt](data/sudoku-sd1.txt) - [sudoku-sd1.xlsx](data/sudoku-sd1.xlsx)
+* Opgave HS.14: [stud2017-v2.txt](data/stud2017-v2.txt) - [stud2017-v2.xls](data/stud2017-v2.xls)
+* Opgave HS.19: [mus_prop.txt](data/mus_prop.txt) - [mus_prop.xlsx](data/mus_prop.xlsx)
+* Opgave HS.22: [fenoldata.txt](data/fenoldata.txt) - [fenoldata.xlsx](data/fenoldata.xlsx)
+
+* Opgave HS.25: [aske-kalk2.txt](data/aske-kalk2.txt) - [aske-kalk2.xlsx](data/aske-kalk2.xlsx)
+
+* Opgave HS.32: [lyskilde.txt](data/lyskilde.txt) - [lyskilde.xlsx](data/lyskilde.xlsx)
+* Opgave HS.34: [patienter.txt](data/patienter.txt) - [patienter.xlsx](data/patienter.xlsx)
+* Opgave HS.35: [flex.txt](data/flex.txt) - [flex.xlsx](data/flex.xlsx)
+-->
 </div>
-<div id="program-for-enkelte-uger" class="section level1">
-<h1>Program for enkelte uger</h1>
-<hr />
-<div id="uge1" class="section level2">
-<h2>Kursusuge 1</h2>
-<div id="generel-info" class="section level3">
-<h3>Generel info</h3>
+<div id="gamle-eksamensopgaver" class="section level3">
+<h3>Gamle eksamensopgaver</h3>
+<p>Følgende datasæt hører til de <a href="https://github.com/anderstolver/StatData1_2021/tree/master/docs/eksamensopgaver">gamle eksamensopgaver</a>.</p>
+<!--
+Jeg minder om, at for eksamensopgaverne op til februar 2017 skulle man ikke selv køre R under eksamen. I stedet er der R kode i selve opgaven. Jeg har dog uploadet en del datasæt også til de gamle eksamensopgaver (før feb. 2017), og du opfordres til selv at køre R koden, hvis du bruger disse opgaver til eksamenstræning.
+
+* Reeksamen feb. 2021, opgave 1: [feb2021opg1.txt](data/feb2021opg1.txt) - [feb2021opg1.xlsx](data/feb2021opg1.xlsx)
+
+* Reeksamen feb. 2021, opgave 2: [feb2021opg2.txt](data/feb2021opg2.txt) - [feb2021opg2.xlsx](data/feb2021opg2.xlsx)
+
+* Eksamen nov. 2020, opgave 1: [nov2020opg1.txt](data/nov2020opg1.txt) - [nov2020opg1.xlsx](data/nov2020opg1.xlsx)
+
+* Eksamen nov. 2020, opgave 2: [nov2020opg2.txt](data/nov2020opg2.txt) - [nov2020opg2.xlsx](data/nov2020opg2.xlsx)
+
+* Eksamen jan. 2020, opgave 1: [salat.txt](data/salat.txt) - [salat.xlsx](data/salat.xlsx)
+* Eksamen jan. 2020, opgave 2: [pestgolf.txt](data/pestgolf.txt) - [pestgolf.xlsx](data/pestgolf.xlsx)
+* Eksamen nov. 2019, opgave 1: [hunde.txt](data/hunde.txt) - [hunde.xlsx](data/hunde.xlsx)
+* Eksamen nov. 2019, opgave 2: [training.txt](data/training.txt) - [training.xlsx](data/training.xlsx)
+* Eksamen jan. 2019, opgave 1: [ss_gr.txt](data/ss_gr.txt) - [ss_gr.xlsx](data/ss_gr.xlsx)
+* Eksamen jan. 2019, opgave 2: [florida.txt](data/florida.txt) - [florida.xlsx](data/florida.xlsx)
+* Eksamen nov. 2018, opgave 1: [soeer.txt](data/soeer.txt) - [soeer.xlsx](data/soeer.xlsx)
+* Eksamen nov. 2018, opgave 2: [elections.txt](data/elections.txt) - [elections.xlsx](data/elections.xlsx)
+* Eksamen jan. 2018, opgave 1: [ss2017-18.txt](data/ss2017-18.txt) - [ss2017-18.xlsx](data/ss2017-18.xlsx)
+* Eksamen jan. 2018, opgave 2:  [johnson-fatpct.txt](data/johnson-fatpct.txt) - [johnson-fatpct.xlsx](data/johnson-fatpct.xlsx)
+
+
+* Eksamen nov. 2017, opgave 1: [guns.txt](data/guns.txt) - [guns.xlsx](data/guns.xlsx)
+
+* Eksamen nov. 2017, opgave 3: [rodlaengde.txt](data/rodlaengde.txt) - [rodlaengde.xlsx](data/rodlaengde.xlsx)
+* Eksamen feb. 2017, opgave 2: [sd12016-2.txt](data/sd12016-2.txt) - [sd12016-2.xls](data/sd12016-2.xls)
+* Eksamen nov. 2016, opgave 1: [sd12016.txt](data/sd12016.txt) - [sd12016.xls](data/sd12016.xls)
+
+* Eksamen nov. 2016, opgave 2: [aske-kalk.txt](data/aske-kalk.txt) - [aske-kalk.xlsx](data/aske-kalk.xlsx)
+
+-->
+<!-- * Eksamen feb. 2016, opgave 2: [sleep.txt](data/sleep.txt) -->
+<!--
+* Eksamen nov. 2015, opgave 1: [mazdas.txt](data/mazdas.txt) - [mazdas.xlsx](data/mazdas.xlsx)
+* Eksamen jan. 2015, opgave 1: [happy.txt](data/happy.txt) - [happy.xlsx](data/happy.xlsx)
+* Eksamen jan. 2015, opgave 3: [foder.txt](data/foder.txt) - [foder.xlsx](data/foder.xlsx)
+* Eksamen jan. 2014, opgave 1: [elefantgraes.txt](data/elefantgraes.txt) - [elefantgraes.xlsx](data/elefantgraes.xlsx)
+-->
 </div>
 <div id="forelæsninger" class="section level3">
 <h3>Forelæsninger</h3>
-<div id="forelæsninger-mandag-kl.-1300-1445" class="section level4">
-<h4>Forelæsninger mandag kl. 13:00-14:45</h4>
-</div>
-<div id="forelæsninger-onsdag-kl.-1000-1145" class="section level4">
-<h4>Forelæsninger onsdag kl. 10:00-11:45</h4>
-</div>
-</div>
-<div id="øvelsestimer" class="section level3">
-<h3>Øvelsestimer</h3>
-<div id="øvelser-mandag-kl.-15.00-16.45" class="section level4">
-<h4>Øvelser mandag kl. 15.00-16.45</h4>
-</div>
-<div id="øvelser-onsdag-kl.-13.00-15.45" class="section level4">
-<h4>Øvelser onsdag kl. 13.00-15.45</h4>
-<hr />
-</div>
+<p>Følgende datasæt har desuden været benyttet ved forelæsningerne</p>
+<!--
+* Eksempel fra 7/9-2020 (højder af studerende på StatData1 i 2017): [stud2017-v2.xls](data/stud2017-v2.xls)
+
+* Data vedrørende transporttid fra bopæl til campus indsamlet ved forelæsning d. 31/8-2020 fra studerende på StatData1 i 2020: [intro_survey_partial.csv](data/intro_survey_partial.csv)
+
+* Mindre udpluk af ovenstående datasæt benyttet ved forelæsningen d. 21/10-2020: [sd12020.txt](data/sd12020.txt) - [sd12020.xlsx](data/sd12020.xlsx)
+-->
+<!--
+* Eksempel fra 7/10-2019 (højder af studerende på StatData1 i 2017): [stud2017-v2.xls](data/stud2017-v2.xls)
+* Data om studerende på Statistisk Dataanalyse 1 indsamlet ved forelæsning d. 2/9-2019: [sd1_eksperiment.xlsx](data/sd1_eksperiment.xlsx) (rådata) - [StatData1stud2019.txt](data/StatData1stud2019.txt) (rensede data)
+-->
 </div>
 </div>
 </div>

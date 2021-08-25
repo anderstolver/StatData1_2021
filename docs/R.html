@@ -11,7 +11,7 @@
 
 
 
-<title>Kursusplan</title>
+<title>Oversigt over R materiale</title>
 
 <script src="site_libs/header-attrs-2.10/header-attrs.js"></script>
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
@@ -291,123 +291,77 @@ $(document).ready(function () {
 
 
 
-<h1 class="title toc-ignore">Kursusplan</h1>
+<h1 class="title toc-ignore">Oversigt over R materiale</h1>
 
 </div>
 
 <div id="TOC">
 <ul>
-<li><a href="#oversigt-over-undervisningen">Oversigt over undervisningen</a>
+<li><a href="#installation-r-pakker-og-nyttige-links">Installation, R pakker og nyttige links</a>
 <ul>
-<li><a href="#liste-over-gennemgået-pensum">Liste over gennemgået pensum</a></li>
+<li><a href="#installation-af-r-og-r-studio">Installation af R og R Studio</a></li>
+<li><a href="#r-pakker-benyttet-på-statistisk-dataanalyse-1">R pakker benyttet på Statistisk Dataanalyse 1</a></li>
+<li><a href="#vejledninger-og-notater">Vejledninger og notater</a></li>
 </ul></li>
-<li><a href="#program-for-enkelte-uger">Program for enkelte uger</a>
-<ul>
-<li><a href="#uge1">Kursusuge 1</a>
-<ul>
-<li><a href="#generel-info">Generel info</a></li>
-<li><a href="#forelæsninger">Forelæsninger</a></li>
-<li><a href="#øvelsestimer">Øvelsestimer</a></li>
-</ul></li>
-</ul></li>
+<li><a href="#centrale-r-begreber-fra-undervisningen">Centrale R begreber fra undervisningen</a></li>
 </ul>
 </div>
 
-<div id="oversigt-over-undervisningen" class="section level1">
-<h1>Oversigt over undervisningen</h1>
-<p>Skemaet giver en grov foreløbig plan for undervisningen. Planen og linket (til højre for hver kursusdag) med detaljerede oplysninger opdateres løbende for hver enkelt undervisningsgang.</p>
-<table>
-<thead>
-<tr class="header">
-<th>Kursusuge</th>
-<th>Dag</th>
-<th>Emner</th>
-<th>Lærebog</th>
-<th>Detaljer</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>1</td>
-<td>Mandag (6/9)</td>
-<td>Introduktion, R, Deskriptiv statistik</td>
-<td>Ch. 1</td>
-<td><a href="#uge1">link</a></td>
-</tr>
-<tr class="even">
-<td>1</td>
-<td>Onsdag (8/9)</td>
-<td>Intro til lineær regression og ensidet ANOVA</td>
-<td>Ch. 2-3</td>
-<td><a href="#uge1">link</a></td>
-</tr>
-</tbody>
-</table>
-<div id="liste-over-gennemgået-pensum" class="section level2">
-<h2>Liste over gennemgået pensum</h2>
-<p>Følgende afsnit fra lærebogen er gennemgået</p>
+<hr />
+<div id="installation-r-pakker-og-nyttige-links" class="section level1">
+<h1>Installation, R pakker og nyttige links</h1>
+<div id="installation-af-r-og-r-studio" class="section level2">
+<h2>Installation af R og R Studio</h2>
+<p>Du skal først installere R: <a href="http://www.r-project.org/">www.r-project.org/</a></p>
+<ul>
+<li>klik CRAN i venstre bjælke og vælg et mirror i Danmark</li>
+<li>vælg operativsystem</li>
+<li>følg vejledningen (brug defaultindstillingerne)</li>
+</ul>
+<p>Dernæst skal du installere RStudio: <a href="http://www.rstudio.com/">www.rstudio.com</a></p>
+<ul>
+<li>Vælg “RStudio Desktop” (gratis)</li>
+</ul>
+<p>Hvis du allerede har RStudio installeret, så kan programmet også updateres inde fra RStudio</p>
+<ul>
+<li>vælg <code>Help</code> i menuen og derefter <code>Check for updates</code></li>
+</ul>
+<hr />
+</div>
+<div id="r-pakker-benyttet-på-statistisk-dataanalyse-1" class="section level2">
+<h2>R pakker benyttet på Statistisk Dataanalyse 1</h2>
+<p>R kode er organiseret i R pakker. Når man installerer R på sin computer får man adgang til en lang række R funktioner, men det er ikke alle R funktioner der er tilgængelige, blot man åbner R. Derfor vil man ofte på brug for at <em>loade</em> R pakker i sine R programmer.</p>
+<p>R pakken <code>MASS</code> følger med R standardinstallationen, men skal loades i dine R programmer ved at køre kommandoen</p>
+<pre class="r"><code>library(MASS)</code></pre>
 <!--
+Følgende øvrige R pakker har været/vil blive benyttet/omtalt på Statistisk Dataanalyse 1 (2020/2021) og disse R pakker skal du selv først installere på din computer og dernæst loade ved at køre kommandoen `library("pakkenavn")`.
 
-* Chapter 1: Datatyper, visualisering og deskriptiv statistik
-
-* Chapter 2: Introduktion til lineær regression
-
-* Chapter 3: Sammenligning af grupper og introduktion til ensidet variansanalyse.
-
-
-* Chapter 4: Normalfordelingen. Nogle af de mere teoretiske ting omkring Infobox 4.2, 4.3 og 4.5 illustreres primært gennem eksempler (computersimulationer). Afsnit 4.4. er kun kursorisk. 
-
-* Chapter 5.3.1-5.3.3: Konfidensintervaller med fokus på konstruktion af konfidensintervaller for middelværdien i en sample (*one sample problem*)
-
-* Chapter 5.1-5.2: Generelle statistisk begreber (statistisk model, estimation) med fokus på lineær regression og ensidet ANOVA.
-
-* Chapter 6.1-6.2: Hypotesetest med særlig fokus på t-test.
-
-* Chapter 6.3-6.4: Om F-test med udgangspunkt i sammensatte hypoteser (flere grupper på en gang) i ensidet ANOVA
-
-* Chapter 6.5: Om fejl af type I og II i forbindelse med hypotesetest
-
-* Chapter 7: Modelkontrol og prædiktion i forbindelse med modeller fittet med `lm()` funktionen i R
-
-* Chapter 8.1: Multipel lineær regression
-
-* Chapter 8.2, 8.3, 8.4.1, 8.4.2: Om tosidet ANOVA og blandede modeller (både kontinuerte og kategoriske forklarende variable). Afsnittene 8.2.2 og 8.4.3 er ikke pensum.
-
-* Chapter 11: Om binomialfordelingen
-
-* Chapter 12: Om analyse af antalstabeller (dog ikke afsnit 12.2.3 og 12.2.4)
-
+* `isdals`: indeholder datasæt fra lærebogen
+* `ggplot2`: indeholder funktioner til at lave figurer
+* `tidyverse`: indeholder en masse nyttige funktioner til at lave manipulationer med datasæt
+* `readxl`: indeholder bl.a funktionen `read_excel` til indlæsning af excel-filer
 -->
-</div>
-</div>
-<div id="program-for-enkelte-uger" class="section level1">
-<h1>Program for enkelte uger</h1>
 <hr />
-<div id="uge1" class="section level2">
-<h2>Kursusuge 1</h2>
-<div id="generel-info" class="section level3">
-<h3>Generel info</h3>
 </div>
-<div id="forelæsninger" class="section level3">
-<h3>Forelæsninger</h3>
-<div id="forelæsninger-mandag-kl.-1300-1445" class="section level4">
-<h4>Forelæsninger mandag kl. 13:00-14:45</h4>
-</div>
-<div id="forelæsninger-onsdag-kl.-1000-1145" class="section level4">
-<h4>Forelæsninger onsdag kl. 10:00-11:45</h4>
-</div>
-</div>
-<div id="øvelsestimer" class="section level3">
-<h3>Øvelsestimer</h3>
-<div id="øvelser-mandag-kl.-15.00-16.45" class="section level4">
-<h4>Øvelser mandag kl. 15.00-16.45</h4>
-</div>
-<div id="øvelser-onsdag-kl.-13.00-15.45" class="section level4">
-<h4>Øvelser onsdag kl. 13.00-15.45</h4>
+<div id="vejledninger-og-notater" class="section level2">
+<h2>Vejledninger og notater</h2>
+<p>Her findes en liste over nogle nyttige/links til vejledninger og manualer, som kan være nyttige, når man arbejder med R.</p>
+<p>Nogle af vejledningerne er skrevet på et forholdsvis højt niveau, så man skal ofte have noget erfaring med R, for at forstå det hele.</p>
+<!--
+* Anders Tolver: [Notat om at lave grafik i R](R/grafik_i_R.html)
+
+
+* Anders Tolver: [Notat om at arbejde med R Markdown formatet](R/RMarkdown.html) (skrevet til StatData1)
+-->
+<ul>
+<li><p>Hadley Wickham &amp; Garrett Grolemund: <a href="https://r4ds.had.co.nz">R for Data Science</a>: virkelig velskrevet bog med fokus på værktøjerne fra R pakkerne i <code>tidyverse</code> (for den øvede R bruger)</p></li>
+<li><p>Yihui Xie, J. J. Allaire &amp; Garrett Grolemund <a href="https://bookdown.org/yihui/rmarkdown/">R Markdown: The Definitive Guide</a>: hvis du bliver glad for at arbejde i R Markdown formatet, så findes der mange gode råd i denne bog (for den øvede R bruger)</p></li>
+</ul>
 <hr />
 </div>
 </div>
-</div>
+<div id="centrale-r-begreber-fra-undervisningen" class="section level1">
+<h1>Centrale R begreber fra undervisningen</h1>
 </div>
 
 

@@ -8,6 +8,16 @@ navbar:
     - text: "Kursusplan"
       href: kursusplan.html
     - text: "Slides"
+      menu: 
+        - text: "6/9-2021"
+        - text: "8/9-2021"
     - text: "R"
+      href: R.html
     - text: "Data"
+      href: data.html
     - text: "Opgaver"
+      menu:
+      - text: "Fra ovelsestimer"
+        href: https://github.com/anderstolver/StatData1_2021/tree/main/docs/opgaver
+      - text: "Gamle eksamensopgaver"
+        href: https://github.com/anderstolver/StatData1_2021/tree/main/docs/eksamensopgaver
