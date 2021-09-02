@@ -309,6 +309,7 @@ $(document).ready(function () {
 <li><a href="#forelæsninger">Forelæsninger</a></li>
 <li><a href="#øvelsestimer">Øvelsestimer</a></li>
 </ul></li>
+<li><a href="#uge2">Kursusuge 2</a></li>
 </ul></li>
 </ul>
 </div>
@@ -340,6 +341,20 @@ $(document).ready(function () {
 <td>Intro til lineær regression og ensidet ANOVA</td>
 <td>Ch. 2-3</td>
 <td><a href="#uge1">link</a></td>
+</tr>
+<tr class="odd">
+<td>2</td>
+<td>Mandag (13/9)</td>
+<td>Normalfordelingen</td>
+<td>Ch. 4.1+4.3</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>Onsdag (15/9)</td>
+<td>Analyse af en stikprøve</td>
+<td>Ch. 4.2+4.4, Ch. 5.3.1-5.3.3</td>
+<td></td>
 </tr>
 </tbody>
 </table>
@@ -387,26 +402,83 @@ $(document).ready(function () {
 <h2>Kursusuge 1</h2>
 <div id="generel-info" class="section level3">
 <h3>Generel info</h3>
+<p>Ud over at følge de skemalagte undervisningsaktiviteter bør du i kursusuge 1</p>
+<ul>
+<li><p>læse den <a href="https://anderstolver.github.io/StatData1_2021/index.html">praktiske information om kurset</a></p></li>
+<li><p>installere de nyeste versioner af <a href="https://cran.r-project.org">R</a> og <a href="https://www.rstudio.com/products/rstudio/download/">R Studio</a> på din computer</p></li>
+<li><p>anskaffe dig et eksemplar af lærebogen <em>Claus Thorn Ekstrøm &amp; Helle Sørensen:</em> <strong>Statistical Data Analyse for the Life Sciences (Second Edition)</strong></p></li>
+</ul>
+<p>Du kan vælge at læse eller orientere dig i lærebogens kapitel 1 inden første forelæsning, men det burde ikke være nødvendigt for at følge med. Til senere forelæsninger vil det generelt være min anbefaling, at I bruger tid på at læse de relevante kapitler på forhånd.</p>
+<p>Bemærk desuden, at der sikkert er stillet flere opgaver end du kan nå i timerne, og at du skal lave resten derhjemme. Husk at du forventes at arbejde 20 timer om ugen med kurset, for at få fuldt udbytte af undervisningen.</p>
 </div>
 <div id="forelæsninger" class="section level3">
 <h3>Forelæsninger</h3>
 <div id="forelæsninger-mandag-kl.-1300-1445" class="section level4">
 <h4>Forelæsninger mandag kl. 13:00-14:45</h4>
+<p>Emner</p>
+<ul>
+<li>Introduktion til kurset</li>
+<li>Genopfriskning af R</li>
+<li>Kapitel 1: Datatyper, deskriptiv statistik</li>
+</ul>
+<p>Slides til dagens forelæsning: <!--
+[fuld version](slides/sd1_forel210906.pdf) - [kort version: 4 slides per side](slides/sd1_forel210906_short.pdf)
+--></p>
+<p>R-program fra forelæsning d. 6/9-2021: <!--
+[output](R/forel2010906_Rprog.html) - [R Markdown](R/forel210906_Rprog.Rmd)
+--></p>
 </div>
 <div id="forelæsninger-onsdag-kl.-1000-1145" class="section level4">
 <h4>Forelæsninger onsdag kl. 10:00-11:45</h4>
+<p>Jeg forsøger at give en kort introduktion til to populære statistiske modeller</p>
+<ul>
+<li>den lineære regressionsmodel</li>
+<li>den ensidede variansanalysemodel</li>
+</ul>
+<p>Jeg vil bruge mindre energi på de matematiske detaljer end der er lagt op til i bogen. Det vigtigste er at forstå problemstillingerne, princippet om mindste kvadraters metode, samt begreber som variation, forventede værdier, population, stikprøve.</p>
+<ul>
+<li>Kapitel 2: Intro til lineær regression og korrelation</li>
+<li>Kapitel 3, dog ikke detaljerne i afsnit 3.4: Intro til ensidet ANOVA</li>
+</ul>
+<!--
+* R Markdown. R Markdown er et filformat til at generere dokumenter der både indeholder almindelig tekst og R-kode med tilhørende output. Det er en hensigtsmæssig måde at arbejde på. Jeg bruger det selv i forbindelse med forelæsningerne, og opgave HS.5 i næste uge hjælper dig i gang.
+-->
+<p>Slides til dagens forelæsning: <!--[fuld version](slides/sd1_forel210908.pdf) - [kort version: 4 slides per side](slides/sd1_forel210908_short.pdf)--></p>
+<p>R-program fra forelæsning d. 8/9-2021: <!--[output](R/forel210908_Rprog.html) - [R Markdown](R/forel210908_Rprog.Rmd)--></p>
 </div>
 </div>
 <div id="øvelsestimer" class="section level3">
 <h3>Øvelsestimer</h3>
 <div id="øvelser-mandag-kl.-15.00-16.45" class="section level4">
 <h4>Øvelser mandag kl. 15.00-16.45</h4>
+<p>Vær opmærksom på, at du kan læse mere om øvelseshold og lokaler i afsnittet om <em>Øvelsestimer</em> på siden med <a href="https://anderstolver.github.io/StatData1_2021/index.html">Praktiske oplysninger</a>.</p>
+<p>HS-opgaver kan findes <a href="https://github.com/anderstolver/StatData1_2021/tree/main/docs/opgaver">her</a>. De øvrige opgaver er fra lærebogen.</p>
+<ul>
+<li>Opgave HS.1: Om at arbejde med R og RStudio. Hvis du har helt styr på hvordan du gebærder dig i R, kan du springe opgaven over.</li>
+<li>Opgave 1.1: Datatyper</li>
+<li>Opgave 1.2: Summary measures. Kommentarer: (a) Du må gerne bruge R, men vær sikker på at du forstår hvad der foregår! (b) Se sidste spørgsmål i HS.1 for hvordan du kan indlæse data til R. (c) Man kan tænke på første kvartil som medianen i deldatasættet der inkluderer observationerne fra den mindste observation til medianen.</li>
+<li>Opgave 1.9. Summary measures, fortsættelse af opgave 1.2</li>
+<li>Opgave 1.7, men kun spørgsmål 1-4: Histogram og boxplot i R</li>
+<li>Opgave 1.8: Histogrammer og boxplots</li>
+</ul>
 </div>
 <div id="øvelser-onsdag-kl.-13.00-15.45" class="section level4">
 <h4>Øvelser onsdag kl. 13.00-15.45</h4>
+<p>HS-opgaver kan findes <a href="https://github.com/anderstolver/StatData1_2021/tree/main/docs/opgaver">her</a>. De øvrige opgaver er fra lærebogen.</p>
+<ul>
+<li>Opgave HS.2: Om installation af R-pakker, datasæt fra pakker</li>
+<li>Opgave HS.3: Om datasæt og variable i R</li>
+<li>Opgave 2.3, men kun spørgsmål 1-7: Lineær regression og korrelation</li>
+<li>Opgave 2.7: Korrelation</li>
+<li>Opgave HS.4: Ensidet ANOVA</li>
+<li>Opgave 3.1: Ensidet ANOVA</li>
+</ul>
 <hr />
 </div>
 </div>
+</div>
+<div id="uge2" class="section level2">
+<h2>Kursusuge 2</h2>
 </div>
 </div>
 
