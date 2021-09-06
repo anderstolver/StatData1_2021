@@ -1,0 +1,104 @@
+---
+title: 'StatData1: om R Markdown (opdateret sep 2021)'
+output: 
+  html_document:
+    toc: true
+---
+
+
+***
+
+
+På denne side er samlet en række nyttige tips og tricks for dig, som gerne vil blive bedre til at bruge R Markdown formatet. 
+
+En grundig introduktion til hvordan du kommer igen findes i Opgave HS. 5 som stilles til regneøvelserne mandag i kursusuge 2.
+
+Indholdet på siden udbygges løbende på baggrund af de behov der opstår i forbindelse med undervisningen på StatData1. I opfordres dog også kraftigt til at smugkigge i alle de R Markdown filer som bliver lagt op på kursushjemmesiden i forbindelse med de enkelte forelæsninger.
+
+
+***
+
+
+# De første linjer i en R Markdown fil ...
+
+En RMarkdown fil (dvs. en `.Rmd` fil) vil typisk indeholde en såkaldt *YAML header*, som består af nogle kommandoer i begyndelse af filen, som er omkranset af `---`. Disse kommandoer kontrollerer bl.a. forskellige ting, som har betydning for, hvordan output-filen kommer til at se ud, når vi *Knitr* dokumentet.
+
+YAML-headeren til dette dokument er meget simpel
+
+```
+---
+title: 'StatData1: om R Markdown'
+output: 
+  html_document:
+    toc: true
+---
+```
+
+Ud over en titel på dokumentet (`title:`), så vil der i html-output produceret fra denne .Rmd-fil bliver inkluderet en indholdsfortegnelse (`toc: true`). Indholdsfortegnelsen indeholder som udgangspunkt de overskrifter (dvs. *Header*s), der optræder i .Rmd-filen.
+
+
+For de R programmer som lægges ud i forbindelse med forelæsningerne benyttes en YAML header af formen
+
+```
+---
+title: 'StatData1: forel190911'
+author: "Anders Tolver"
+output:   
+  html_document:
+    theme: sandstone
+    toc: true
+    code_folding: hide
+---
+```
+
+Her benyttes `theme: sandstone`. Der findes en række for-programmerede temaer (`theme`) som bl.a. kontrollerer skrifttypen i output-filen. Du kan se en [oversigt over temaer](http://www.datadreaming.org/post/r-markdown-theme-gallery/) her.
+
+Jeg benytter desuden `code_folding: hide` til at sikre, at R koden som udgangspunkt er skjult i output-filen (men den kan kaldes frem ved at klikke på `show` ud for de enkelte kodefragmenter i output-filen).
+
+Kapitel 3.1 i Yihui Xie, J. J. Allaire & Garrett Grolemund [R Markdown: The Definitive Guide](https://bookdown.org/yihui/rmarkdown/html-document.html) indeholder detaljeret info om, hvordan man kan forbedre og kontrollere layout i html-dokumenter produceret ud fra R Markdown filer.
+
+***
+
+
+# Code chunks
+
+*Code chunks* er blokke i R Markdown filen, som indeholder R kode. En *Code chunk* starter med `{r}`, og som udgangspunkt bliver både R kode og resultater vist i den endelige output-fil, når man *Knitr* dokumentet sammen.
+
+Der findes en række nyttige options som man kan ændre på for at kontrollere, hvordan R kode og resultater bliver vist i output-filen.
+
+Skriver man i stedet `{r echo = FALSE}` i starten af en *code chunk*, så vil resultaterne af at køre R koden blive vist i output, men selv R koden vil ikke være med i output-filen. Det er nyttigt, hvis læseren af dokumentet ikke forventes at have interesse i selve R koden.
+
+En mere udførlig oversigt over mulige *Chunk options* findes i følgende vejledning: [flere chunk options](https://www.rstudio.com/wp-content/uploads/2015/03/rmarkdown-reference.pdf).
+
+Et par eksempler ses her (sig endelig til, hvis I har ønsker til listen)
+
+* `{r echo = FALSE}`: R koden vises ikke i output
+* `{r include = FALSE}`: hverken R kode eller output vises i output men R koden køres (kan fx. benyttes til *code chunks* hvor der blot indlæses R pakker eller datasæt)
+* `{r cache = TRUE}`: sikrer at R koden i en *code chunk* kun køres igen, når man *Knitr* dokumentet sammen, hvis der er blevet ændret i R koden siden sidst (dette kan bruges til at *speede processen* op, så det går hurtigere at *Knit*te dokumentet sammen)
+
+
+***
+
+
+# Figurer
+
+Det kan være lidt udfordrende at have *code chunks* med R kode til at producere figurer. Det kræver typisk lidt arbejde at sikre, at figurerne kommer til at se pæne ud i output-filen.
+
+Man kan kontrollere meget ved at ændre på relevante *chunk options*.
+
+* `fig.align = "center"`: sørger for at centrere figuren i output-filen
+* `out.width="50%"`: sørger for at figuren kun fylder 50 % af bredden i output-filen
+* `echo = FALSE`: sørger for at R koden til at producere figuren ikke vises i output-filen
+
+Følgende eksempel optegner et boxplot for Example 3.2 i lærebogen (se også slides fra onsdag i kursusuge 1). Hertil benyttes følgende kode til at kontroller options for *code chunk*en med R koden til at producerede boxplottet
+
+```
+{r fig.align="center", out.width="50%", echo = FALSE}
+```
+
+```{r fig.align="center", out.width="50%", echo = FALSE}
+library(isdals)
+data(antibio)
+boxplot(antibio$org ~ antibio$type)
+```
+
