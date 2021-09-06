@@ -1,0 +1,208 @@
+---
+title: "StatData1: forelæsning d. 6/9-2021"
+author: "Anders Tolver"
+output:   
+  html_document:
+    theme: sandstone
+    toc: true
+    code_folding: hide
+---
+
+# Beskrivelse og indlæsning af data
+
+Datasættet `cats` ligger i R pakken MASS og skal loades før brug
+
+```{r}
+library(MASS)
+data(cats)
+```
+
+Data vedrører 144 katte. Der er tre variable datasættet
+
+* Køn: `Sex`
+* Kropsvægt i kg: `Bwt`
+* Vægt af hjerte i gram `Hwt`
+
+```{r}
+head(cats, n = 3) # udskriver de først tre datalinjer
+```
+
+Hvilken datatyper har de tre variable i datasættet?
+
+
+# Deskriptiv statistisk
+
+## Stikprøvestørrelser/summariske mål
+
+Hvis vi vil undersøge variablen `Bwt` (kropsvægt), så skal vi fortælle R, at den skal finde variablen i datasættet `cats`. Hertil benyttes symbolet `$`
+
+```{r}
+cats$Bwt ### udskriver alle værdierne af variablen 'Bwt'
+```
+
+Nedenfor udregnes en række forskellige stikprøvestørrelse (eng: *summary statistics*) for den **numeriske** variabel `Bwt` (kropsvægt).
+
+Middelværdi (eng: *mean*)
+```{r}
+mean(cats$Bwt) ### middelværdi / mean
+```
+
+Spredning (eng: *standard deviation*)
+```{r}
+sd(cats$Bwt) ### spredning / standard deviation
+```
+
+Varians (eng: *variance*)
+```{r}
+var(cats$Bwt) ### varians / variance
+```
+
+Median (eng: *median*) dvs. den midterste observation, når man sorterer værdierne efter størrelse
+```{r}
+median(cats$Bwt) ### median
+```
+
+Kvartiler (eng: *quantiles*) udregnes sammen med middelværdi, median og *range* (intervallet fra mindste til største observation) ved brug af kommandoen `summary`
+
+```{r}
+summary(cats$Bwt) ### oplister diverse stikprøvestørrelser / summary statistics
+```
+
+## Tabeller
+
+Her laves en tabel for den **kategoriske** variabel `Sex` (dvs. køn)
+
+```{r}
+table(cats$Sex) ### tabel over fordelingen af observationer på `Sex`
+```
+
+# Visualisering
+
+Der findes flere forskellige systemer til at producere grafik (dvs. figurer) i R. I bogen og i opgaverne benyttes især det system, der følger med standardinstallation af R. Det er helt ok, men jeg vil gerne give jer mulighed for også at lære at lave grafik ved brug af R pakken `ggplot2`. Det er valgfrit, om I vælger at prøve at lære begge dele, og det er meget begrænset, hvor meget I forventes at kunne. Erfaringsmæssig kan det dog virke utilfredsstillende at lære at lave statistiske analyser i R, hvis man slet ikke kan lave figurer (for det er faktisk noget der hæver R over meget andet software til statistisk dataanalyse).
+
+Hvis du vil igang med at lave grafik med `ggplot2` skal pakken først installeres på din computer. (Se eventuelt Opgave HS. 2 fra øvelsestimerne onsdag i kursusuge 1).
+
+Sørg dernæst for at loade R pakken
+
+```{r}
+library(ggplot2) ### load ggplot-pakken. Skal være installeret
+```
+
+## Scatterplot
+
+Benyttes til visualisering af sammenhængen mellem to numeriske / kontinuerte variable. Her produceres et scatterplot til illustration af sammenhængen mellem kropsvægt ('Bwt') og hjertevægt ('Hwt') for katte i datasættet `cats`.
+
+Men standardgrafik kan man skrive
+
+```{r}
+plot(cats$Hwt ~ cats$Bwt)
+```
+
+eller alternativt 
+
+```{r eval = F}
+plot(cats$Bwt, cats$Hwt)
+```
+
+For at lave en version med pænere layout skal man rode med lidt flere options / argumenter til `plot` funktionen.
+
+```{r}
+plot(cats$Hwt ~ cats$Bwt, xlab = "Body weight (kg)", ylab = "Heart weight (g)"
+     , main = "Cats data", col = cats$Sex)
+```
+
+Bemærk, at `plot` funktionen har et `data` argument, som kan bruge så vi undgør at skulle benytte `$`-syntaksen til at henvise til variable i datasættet `cats`. Prøv fx. selv at køre kommandoen
+
+```{r eval = F}
+plot(Hwt ~ Bwt, xlab = "Body weight (kg)", ylab = "Heart weight (g)", data = cats, pch = 16
+     , main = "Cats data", col = Sex)
+```
+
+Hvis man ønsker at lave et scatterplot ved brug af funktionerne i R pakken `ggplot2`, så kan man gøre følgende
+
+```{r}
+ggplot(data = cats) + geom_point(aes(x = Bwt, y = Hwt, color = Sex)) + labs(x = "Body weight (kg)", y = "Heart weight (g)") + 
+  theme(legend.position = "top") 
+```
+
+Ønsker man at fjerne den grå baggrund, så kan man skrive
+
+```{r}
+ggplot(data = cats) + theme_bw() + geom_point(aes(x = Bwt, y = Hwt, color = Sex)) + labs(x = "Body weight (kg)", y = "Heart weight (g)") 
+```
+
+## Boxplots
+
+Et boxplot visualiserer (de numeriske) målinger i en sample ved at tegne et boks der markerer 25 % fraktil, median og 75 % fraktil. Desuden vises *halerne* i fordelingen med nogle linjer (*whiskers*) og eventuelt nogle af de mest ekstreme målinger (*outliers?*).
+
+Med standardgrafik kan et boxplot laves med funktionen `boxplot`
+
+```{r}
+boxplot(cats$Hwt, main="Heart weight", col = "lightgray")
+```
+
+Prøv at sammenligne det tre vandrette linjer i den grå boks med kvartilerne beregnet med `summary` nedenfor
+```{r}
+summary(cats$Hwt)
+```
+
+Med `ggplot2` R pakken kan funktionen `geom_boxplot` benyttes til fremstilling af boxplots. Bemærk at her vises både, hvordan man kan lave et samlet boxplot for alle målinger, og et boxplot for hver af de to køn.
+
+```{r fig.show = 'hold', out.width = '50%'}
+ggplot(data = cats) + geom_boxplot(aes(y = Hwt)) + labs(y = "Heart weight (kg)")
+ggplot(data = cats) + geom_boxplot(aes(y = Hwt, x = Sex, color = Sex)) + labs(y = "Heart weight (kg)")
+```
+
+## Histogrammer
+
+Et histogram viser fordelingen af numerisk / kontinuert / kvantitativ variable i en sample ved at gruppere målingerne i grupper efter størrelse.
+
+Simple histogrammer for hjertevægt (`Hwt`) og kropsvægt (`Bwt`) produceret med `hist` funktionen fra standardinstallationen af R
+
+```{r}
+par(mfrow=c(1,2)) ### placerer figurerne ved siden af hinanden
+hist(cats$Bwt)
+hist(cats$Hwt)
+```
+
+Et mere lækkert histogram hvor
+
+* figurerne placeres ved siden af hinanden
+* der benyttes 20 søjler
+* søjlerne farves lyserøde
+* der sættes *labels* på x-aksen
+* der sættes en overskrift på figuren
+* det samlede areal under boksene skaleres til at være 1 (dvs. 100 %)
+
+```{r}
+par(mfrow = c(1, 2))
+hist(cats$Bwt, xlab="Body weight (kg)", main="Cats: Body weight", nclass=20, prob=TRUE, col = "pink")
+hist(cats$Hwt, xlab="Heart weight (g)", main="Cats: Heart weight", nclass=20, prob=TRUE, col = "pink")
+```
+
+Med `ggplot2` R pakken benyttes `geom_histogram` funktionen til optegning af histogrammer. 
+
+Det først eksempel vist her er ikke særlig vellykket ...
+
+```{r}
+ggplot(data = cats) + geom_histogram(aes(x = Bwt))
+```
+
+Når vi får valgt bredden af søjlerne passende (med `binwidth`), ser det bedre ud ...
+```{r}
+ggplot(data = cats) + geom_histogram(aes(x = Bwt), binwidth = 0.1) +
+  labs(x = "Kropsvaegt (kg)", y = "Antal")
+```
+
+Og her går er vi i fuld kontrol og laver et histogram hvor
+
+* der benyttes 10 søjler ('bins')
+* der tegnes et separat histogram for hvert køn
+* søjlerne farves hvide og kanten farves efter køn
+
+```{r}
+ggplot(data = cats) + geom_histogram(aes(x = Bwt, color = Sex), bins = 10, fill = "white") + facet_wrap(. ~ Sex) + labs(x = "Kropsvaegt (kg)", y = "Antal")
+```
+
+
+

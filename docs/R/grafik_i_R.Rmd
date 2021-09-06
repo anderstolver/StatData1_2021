@@ -1,0 +1,201 @@
+---
+title: 'StatData 1: om grafik i R (opdateret sep 2021)'
+output: 
+  html_document:
+    theme: sandstone
+    toc: true
+    code_folding: hide
+params:
+  data: "cats"
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = F)
+```
+
+```{r init, include = FALSE}
+library(tidyverse)
+```
+
+
+***
+
+
+Der er rigtig gode muligheder for at producere professionel grafik i R. Det forventes ikke, at I kan lave andet end de få standardfigurer, som optræder ved forelæsningerne. Det drejer sig om
+
+* scatterplot
+* histogrammer
+* QQ-plot
+* Boxplot
+
+Hen over hele undervisningsmaterialet vil det som udgangspunkt være illustreret, hvordan man kan lave figurerne med to typer af R værktøjer
+
+* med funktioner der følger med standardinstallationen i R
+* med funktioner i R pakken `ggplot2` (der bl.a. loades hvis man henter `tidyverse` med kommandoen `library(tidyverse)`)
+
+Formålet med dette dokument er at give den interesserede StatData1-studerende bedre forudsætninger for at  lære at lave grafik med R.
+
+Vi starter med at indlæse to datasæt, som benyttes til illustration
+
+* `cats` fra `MASS` R-pakken: indeholder målinger af kropsvægt (i kg) og hjertevægt (i g) for 144 katte
+
+* `antibio` fra `isdals` R-pakken: indeholder målinger af indholdet af organisk stof i gødning fra kvier som har modtaget foder med forskellige typer af antibiotika
+
+```{r}
+library(MASS) ### indeholder datasættet 'cats'
+library(isdals) ### indeholder alle datasæt benyttet i lærebogen
+data(antibio)
+```
+
+
+***
+
+
+# Standardgrafik
+
+## Scatterplot
+
+Simpel R kode til at producere scatterplot af hjertevægt mod kropsvægt for de 144 katte i datasættet `cats`
+
+```{r}
+plot(cats$Bwt, cats$Hwt)
+```
+
+R-koden nedenfor viser hvordan man kan
+
+* ændre teksten på akserne
+* tilføje en overskrift
+* ændre plot-symbolet (prøv selv med andre værdier af `pch`)
+* farven af plot-symbolerne
+* hvilke intervaller af x- og y-værdier der skal vises på figuren
+* tilføje en ret linje (med skæring og hældning fundet ved lineær regression tidl. på kurset)
+
+```{r}
+plot(cats$Bwt, cats$Hwt, xlab = "Body weight (kg)",  ylab = "Heart weight (g)"
+     , main = "Cats data", pch = 16, col = "red"
+     , ylim = c(0, 25), xlim = c(1, 5))
+abline(-0.3567, 4.0314)
+```
+
+**NB:** Du skal markere og køre begge linjerne `plot()` og `abline()` på en gang. Det virker ikke, hvis du kører `abline()` kommandoen alene.
+
+## Histogrammer
+
+Der findes del information om, hvordan man kan lave histogrammer i [R programmet fra første forelæsning](forel210906_Rprog.html)
+
+Simpel R kode til at lave histogrammer for hjertevægt (`Hwt`) og kropsvægt (`Bwt`) findes her
+
+```{r, out.width="49%", fig.show = "hold"}
+hist(cats$Bwt)
+hist(cats$Hwt)
+```
+
+
+R koden neden for viser hvordan man kan sørge for at
+
+* der benyttes 20 søjler
+* søjlerne farves lysegrå
+* der sættes labels på x-aksen
+* der sættes en overskrift på figuren
+* det samlede areal under boksene skaleres til at være 1 (dvs. 100 %)
+
+```{r, out.width="49%", fig.show = "hold"}
+hist(cats$Bwt, xlab="Body weight (kg)", main="Cats: Body weight", nclass=20, prob=TRUE, col = "lightgray")
+hist(cats$Hwt, xlab="Heart weight (g)", main="Cats: Heart weight", nclass=20, prob=TRUE, col = "lightgray")
+```
+
+
+## Boxplot
+
+Simpel R-kode til at producere et boxplot af indholdet af organisk stof i hver af de 6 fodergrupper fra datasættet `antibio` i `isdals` R-pakken
+```{r}
+boxplot(antibio$org ~ antibio$type)
+```
+
+
+# Grafik med R-pakken `ggplot2`
+
+Det kræver lidt øvelse at forstå logikken, når man skal producere grafik i R ved brug af `ggplot2` R-pakken. Det er bl.a. nyttigt at vide at
+
+* en figur opbygges ved at tilføje forskellige lag/komponenter (adskilt med symbolet `+` i R-koden)
+* hver type figur produceres med en bestemt type funktion (kaldet en `geom`) og man bør google hvilke *options* (kaldet: *aestetics*) der hører til de forskellige typer af figurer
+* i praksis laver man en bestemt type figur (`geom`) ved at fortælle hvilke variable fra det relevante datasæt, som skal afbildes (*mappes*) til de forskellige komponenter (*aestetics*) på figuren
+
+Det er særdeles nyttigt at google sig frem til gode eksempler, når man skal lave figurer med `ggplot2`. Når man er kommet godt igang, så kan følgende [cheat sheet](https://www.rstudio.com/wp-content/uploads/2015/03/ggplot2-cheatsheet.pdf) være til stor hjælp.
+
+## Scatterplot
+
+Simpel R kode til at producere scatterplot af hjertevægt mod kropsvægt for de 144 katte i datasættet `cats`
+
+```{r}
+ggplot(data = cats) + geom_point(aes(x = Bwt, y = Hwt))
+```
+
+**Forklaring:** Scatterplot laves med funktionen `geom_point`. Et scatterplot er en visualisering af to kontinuerte variable imod hinanden, og for at lave et scatterplot skal man som minimum angive, hvilke variable der skal være på `x` hhv. `y` aksen. I `ggplot2` syntaks siger man, at vi angiver hvilke variable fra datasættet, som skal *mappes* til `x` og `y` *aestetics* hørende til `geom_point()` funktionen. På figuren ovenfor er det datasættet `cats` som afbildes på et scatterplot ved at variablene `Bwt` og `Hwt` *mappes* til `x` og `y`.
+
+Følgende [link](https://ggplot2.tidyverse.org/articles/ggplot2-specs.html) giver en detaljeret oversigt over, hvordan man kontrollerer nogle af de vigtigste `aestetics` som benyttes i forbindelse med `ggplot2`.
+
+Nedenfor findes et antal eksempler på, hvordan man kan ændre udseendet af scatterplottet ved at ændre forskellige andre *aestetics* hørende til `geom_point()` funktionen. Prøv selv at eksperimenter med at ændre og fjerne forskellige komponenter på figuren ved at modificere R-koden.
+
+
+```{r, out.width="49%", fig.show = "hold"}
+ggplot(data = cats) + geom_point(aes(x = Bwt, y = Hwt, color = Sex))
+
+ggplot(data = cats) + geom_point(aes(x = Bwt, y = Hwt, fill = Sex), shape = 21)
+
+ggplot(data = cats) + geom_point(aes(x = Bwt, y = Hwt), alpha = 1, colour = "blue", fill = "lightblue"
+                                 , shape = 21
+                                 , size = 5
+                                 , stroke = 3)
+
+ggplot(data = cats) + geom_point(aes(x = Bwt, y = Hwt, fill = Sex), shape = 21, size = 4, stroke = 2, alpha = 0.5) + labs(x = "Body weight (kg)", y = "Heart weight (g)") +
+  lims(x = c(1.5, 4.5), y = c(4, 22)) +
+  scale_fill_manual(values = c("F" = "red", "M" = "blue")) +
+ theme_bw() +  ggtitle("Sammenhaeng mellem kropsvaegt og hjertevaegt for katte") +
+  geom_abline(intercept = -0.3567, slope = 4.0341)
+
+```
+
+## Histogrammer
+
+Simpel R kode til at lave histogrammer for hjertevægt (Hwt) og kropsvægt (Bwt) findes her
+
+```{r, fig.show = "hold", out.width = "49%"}
+ggplot(data = cats) + geom_histogram(aes(x = Bwt), binwidth = 0.1) +
+  labs(x = "Kropsvaegt (kg)", y = "Antal")
+ggplot(data = cats) + geom_histogram(aes(x = Hwt), binwidth = 1) +
+  labs(x = "Hjertevaegt (g)", y = "Antal")
+```
+
+**Forklaring:** Et histogram laves med funktionen `geom_histogram`. Et histogram viser andelen af observationer som falder i givne intervaller (eng: *bins*). Antallet af observationer i hvert interval visualiseres ved en *kasse/søjle*. Man skal som minimum angive, hvilken variabel (`x`) der skal optegnes på histogrammmet. I koden ovenfor har vi også valgt bredden (`binwidth`) af søjlerne på histogrammet og sat navne på akserne.
+
+
+## Boxplot
+
+Simpel R-kode til at producere et boxplot af indholdet af organisk stof i hver af de 6 fodergrupper fra datasættet `antibio` i `isdals` R-pakken.
+
+```{r}
+ggplot(data = antibio) + geom_boxplot(aes(x = type, y = org))
+```
+
+**Forklaring:** Boxplot laves med funktionen `geom_boxplot`. Et boxplot visualiserer primært fraktilerne for en kontinuert variable typisk opdelt efter grupper givet ved en kategorisk variabel. Man skal derfor som minimum angive, hvilken variabel der skal afbildes (`y`) samt hvilken kategorisk variabel (`x`)  i datasættet der repræsenterer den relevant opdeling af datasættet i grupper.
+
+Prøv selv at forklare hvad der sker, hvis du fjerner `x = type` fra R-koden ovenfor.
+
+Nedenfor vises eksempler på, hvordan man kan ændre på boxplottet.
+
+
+```{r, out.width="49%", fig.show = "hold"}
+ggplot(data = antibio) + geom_boxplot(aes(x = type, y = org, fill = type))
+
+ggplot(data = antibio) + geom_boxplot(aes(x = type, y = org, color = type), fill = "lightblue", linetype = 1)
+
+ggplot(data = antibio) + geom_boxplot(aes(x = type, y = org, color = type), fill = "lightgrey") + coord_flip()
+
+ggplot(data = antibio) + geom_boxplot(aes(x = type, y = org), width = 0.3) +
+  labs(x = "Fodertype", y = "Organisk stof", title = "Example 3.2: Antibiotics and dung decomposition") + theme_bw() + lims(y = c(2.2, 3.2)) +
+  geom_hline(yintercept = mean(antibio$org), linetype = 2, color = "blue")
+
+```
+
