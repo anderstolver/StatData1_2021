@@ -1,0 +1,171 @@
+---
+title: 'StatData1: forel210908'
+author: "Anders Tolver"
+output:   
+  html_document:
+    theme: sandstone
+    toc: true
+    code_folding: hide
+---
+
+# Lineær regression
+
+Vi benytter datasættet `cats` fra R pakken MASS
+
+```{r}
+library(MASS)
+data(cats)
+```
+
+Data vedrører 144 katte. Der er tre variable datasættet
+
+* Køn: `Sex`
+* Kropsvægt i kg: `Bwt`
+* Vægt af hjerte i gram `Hwt`
+
+```{r}
+head(cats, n = 3) # udskriver de først tre datalinjer
+```
+
+Vi forestiller os, at kropsvægten `Bwt` kan være nyttig, hvis man ønsker at forudsige værdien af hjertevægten `Hwt`.
+
+Regressionsanalyse handler netop om, at beskrive sammenhængen mellem to kvantitative variable med henblik på at forklare responsen (her: `Hwt`) ud fra en forklarende variabel (her: `Bwt`).
+
+**Linear regression** giver mening, hvis sammenhængen mellem respons og forklarende variabel er tilnærmelsesvis lineær. Vi starter med at plotte data (scatterplot!) for at vurdere om sammenhængen er lineær ...
+
+```{r warning = F, message = F}
+library(ggplot2)
+ggplot(data = cats) + geom_point(aes(x = Bwt, y = Hwt)) + theme_bw() + labs(x = "Body weight (kg)", y = "Heart weight (g)")
+```
+
+Datapunkterne ligger (naturligvis) ikke fuldstændigt på en ret linje, men det virker ikke urimeligt at benytte lineær regression.
+
+## Fit af regressionslinje
+
+Vi ønsker at bestemme en ligning af formen 
+
+y = a * x + b
+
+som bedst muligt kan forudsige y (=hjertevægt), hvis man kender x (=kropsvægt).
+
+For at bestemme regressionslinjen, så skal vi *estimere* (dvs. beregne) værdien af *parametrene* a og b ud fra datapunkterne. Hertil benyttes `lm()` funktionen, der benyttes sig af *mindste-kvadraters-metode*
+
+```{r}
+linreg <- lm(Hwt ~ Bwt, data = cats) ### estimer regressionslinje
+linreg ### udskriv resultat
+```
+
+Heraf aflæses
+
+* Estimatet for linjens skæring `(Intercept)`: `r coef(linreg)[1]`
+* Estimatet for linjens hældning `Bwt`: `r coef(linreg)[2]`
+
+**Fortolkning af regressionslinje:** 
+For to (grupper af) katte med en forskel på 1 kg i kropsvægt, så vil vi alt andet lige gætte på, at at kattene som vejer mest også har en forøget hjertevægt på 4.0341 g i gennemsnit.
+
+## Indtegn fittet regressionslinje på scatterplot
+
+Med standardgrafik kan man tegne et scatterplot, men regresssionslinje indtegnet på følgende måde
+
+```{r}
+plot(cats$Bwt, cats$Hwt, xlab = "Bodyweight(kg)", ylab = "Heart weight (g)", main = "Cats data")
+abline(-0.3567, 4.0341, col = "red")
+```
+
+Bemærk, at vi her selv har indtastet estimaterne for skæring (a) og hældning (b) som argumenter til funktionen `abline()` i koden ovenfor. Her (nedenfor) vises et alternativ, som kan benyttes til at få indtegnet regressionslinjen automatisk
+
+```{r eval = F}
+plot(cats$Bwt, cats$Hwt, xlab = "Bodyweight(kg)", ylab = "Heart weight (g)", main = "Cats data")
+abline(linreg, col = "red")
+```
+
+
+# Korrelationer
+
+Hvis man måler to kvantitative variable (x og y), så kan man være interesseret i at beskrive sammenhængen mellem de to. Lineær regression forudsætter, at man enten ønsker at forklare y ud fra x eller x ud fra y, men i mange situationer er variablene x og y ligeværdige. 
+
+Korrelationskoefficienten forsøger at måle graden af (den lineære) sammenhæng mellem x og y, uden at vi tager stilling til om y eller x skal være responsvariablen. 
+
+I praksis undersøger man med korrelationskoefficienten om observationer med en særlig stor værdi af x (dvs. over populationsgennemsnittet) også typisk har en særlig stor værdi af y (dvs. over populationsgenemsnittet). Den præcise formel for korrelationskoefficienten er særlig god til at fange en sammenhæng mellem x og y, hvis scatterplottet for (x,y) tyder på en lineær sammenhæng mellem variablene. 
+
+Om brug af korrelationskoefficienten bemærkes
+
+* at den primært bør bruges, hvis scatterplottet for (x,y) antyder en lineær sammenhæng
+
+* at den altid ligger mellem -1 og 1
+* at den er 0, hvis der ikke er nogen (lineær) information om y i x eller omvendt
+* at den er +1 (eller -1), hvis punkterne ligger perfekt på en linje med positiv (eller negativ) hældning
+
+Vi har ovenfor set, at der ser ud til at være en lineær sammenhæng mellem kropsvægt (`Bwt`) og hjertevægt (`Hwt`).
+
+Korrelationskoefficienten beregnes
+```{r}
+cor(cats$Bwt, cats$Hwt) ### korrelationskoefficient
+```
+
+Korrelationskoefficienten antyder en positiv sammenhæng mellem kropsvægt og hjertevægt: høj kropsvægt og høj hjertevægt har en tendens til at optræde sammen!
+
+# Ensidet variansanalyse
+
+Hvis man har målt værdien af en kvantitativ kontinuert variabel og målingerne er inddelt i grupper på baggrund af en kategorisk variable, så vil man ofte være interesseret i, at sammenligne grupperne. Mere præcist: er værdien af den kontinuerte (respons-)variabel ens i de forskellige grupper?
+
+Datasættet `antibio` beskrevet på dagens forelæsningsslides (4/9-2019) indeholder målinger af mængden af organisk materiale (`org`) i gødning fra 36 kvier, som er inddelt i seks grupper (`type`). Grupperne angiver hvilken type antibiotikum, som har været tilsat til kviernes foder. Gruppen `type = Control` angiver, at der ikke har været tilsat antibiotikum til foderet.
+
+Et udpluk at data ses her
+
+```{r}
+library(isdals)
+data(antibio)
+head(antibio, n=7)
+```
+
+Vi ønsker at forklare variationen i mængden af organisk stof ud fra en ene forklarende (kategoriske) variable `type`. Ensidet variansanalyse er en metode, der er velegnet til denne problemstilling.
+
+## Boxplot
+
+Start altid med at visualisere data, så man kan se
+
+* variationen inden for grupperne
+* variationen mellem grupperne
+
+Et boxplot fokuserer på at vise variationen vha. fraktilerne i fordelingen ...
+```{r}
+boxplot(antibio$org ~ antibio$type)
+```
+
+Der er noget forskel på median-værdierne af `org` for gødning fra de forskellige `typer`. Udfordringen ligger dog i, at der også er en del variation inden for hver fodergruppe (`type`). 
+
+Senere på kurset taler vi om objektive metoder til at udtale sig om, hvorvidt der er væsentlig forskel på grupperne, når det kommer til indholdet af organisk materiale.
+
+## Ensidet ANOVA (udregning af gruppegennesnit)
+
+En ensidet variansanalyse (ANOVA) fokuserer på sammenligning af gruppegennemsnit. Funktionen `lm()` kan benyttes til at udregne gruppegennemsnit som følger ...
+
+```{r}
+### fit af ensidet ANOVA, gruppegennemsnit
+lm(org ~ type - 1, data = antibio)
+```
+
+## Udregning af stikprøvestørrelse opdelt på gruppe
+
+I forbindelse med ensidet variansanalyse (ANOVA) og i mange andre situationer kan det være nyttigg at kunne foretage beregninger af middelværdi, median osv. for en kontinuert variabel for hver gruppe, når man inddeler efter en kategorisk variabel. 
+
+R pakken `tidyverse` indeholder en mængde R funktioner, som er nyttige til at arbejde effektivt med data. 
+
+Her vises, hvordan man på baggrund af datasættet `antibio` kan udregne diverse summariske mål (stikprøvestørrelser) for responsvariablen `org` opdelt på fodergruppen (`type`). Sammenlign med middelværdierne, som blev udregnet med `lm()` funktionen ovenfor. 
+
+```{r message = F}
+library(tidyverse) ### indlæs "tidyverse" R pakken (skal installeres først!)
+antibio <- as_tibble(antibio)
+summarize(group_by(antibio, type), mean_org = mean(org), sd_org = sd(org), median_org = median(org))
+```
+
+Forklaring til R koden ovenfor (linje-for-linje)
+
+* indlæs `tidyverse` R pakken
+* lav `antibio` om til et objekt af type `tibble` (dette er nødvendigt for at man kan arbejde med funktionerne i R pakken `tidyverse`)
+* udregn diverse summariske størrelser på datasættet `antibio`
+    - hvor udregningerne fortages for hver `type`
+    - `mean_org`: er middelværdien af `org` 
+    - `sd_org`: er spredningen af `org` 
+    - `median_org`: er medianværdien af `org` 
