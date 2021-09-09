@@ -109,7 +109,7 @@ Korrelationskoefficienten antyder en positiv sammenhæng mellem kropsvægt og hj
 
 Hvis man har målt værdien af en kvantitativ kontinuert variabel og målingerne er inddelt i grupper på baggrund af en kategorisk variable, så vil man ofte være interesseret i, at sammenligne grupperne. Mere præcist: er værdien af den kontinuerte (respons-)variabel ens i de forskellige grupper?
 
-Datasættet `antibio` beskrevet på dagens forelæsningsslides (4/9-2019) indeholder målinger af mængden af organisk materiale (`org`) i gødning fra 36 kvier, som er inddelt i seks grupper (`type`). Grupperne angiver hvilken type antibiotikum, som har været tilsat til kviernes foder. Gruppen `type = Control` angiver, at der ikke har været tilsat antibiotikum til foderet.
+Datasættet `antibio` beskrevet på dagens forelæsningsslides (9/9-2021) indeholder målinger af mængden af organisk materiale (`org`) i gødning fra 36 kvier, som er inddelt i seks grupper (`type`). Grupperne angiver hvilken type antibiotikum, som har været tilsat til kviernes foder. Gruppen `type = Control` angiver, at der ikke har været tilsat antibiotikum til foderet.
 
 Et udpluk at data ses her
 
