@@ -1,0 +1,34 @@
+# Ved forelæsning i SD1 d. 8/9-2021 fik de studerende udleveret et blank seddel
+# med en af farverne: grøn, gul, rød og blå. De blev bedt om at markere to punkter
+# således at de på øjemål blev vurderet at have en indbyrdes afstand på ca. 8
+# cm. Der blev returneret (NB: nogle kan være blanke)
+#
+# 21 blå
+# 42 gule
+# 47 røde
+# 41 grønne
+# 151 totalt
+# 
+# et udpluk at resultaterne ses her (20 tilfældigt udvalgte sedler)
+
+gul 7.3
+blå 6.6
+gul 10.1
+rød 12.1
+gul 11.5
+grøn  8.6
+gul 3.1
+gul 7.7
+blå 8.3
+blå 5.2
+rød 6.6
+rød 9.5
+grøn  8.5
+blå 7.8
+gul 7.5
+gul 7.6
+grøn  7.1
+grøn  9.4
+grøn  6.5
+gul 10.4
+

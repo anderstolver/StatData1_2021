@@ -1,0 +1,324 @@
+---
+title: 'StatData1: forel210913'
+author: "Anders Tolver"
+output:   
+  html_document:
+    theme: sandstone
+    toc: true
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+***
+
+
+# Om at arbejde med normalfordelingen
+
+I dette R program beskrives forskellige nyttige kommandoer til at arbejde med normalfordlingen i R
+
+* hvordan indtegnes en normalfordelingstæthed oven i et histogram?
+* hvordan benyttes R til at foretage beregninger af sandsynligheder og fraktiler i normalfordelingen?
+* hvordan undersøges om en kvantitativ kontinuert variabel med rimelighed kan approksimeres med en normalfordeling?
+
+
+***
+
+## Indlæsning af data
+
+Vi indlæser et datasæt bestående af selvrapporterede højder (i cm) for studerende på StatData1 i 2017. Data er indsamlet af Helle Sørensen.
+
+Bemærk at vi kun udvælger to variable fra datasættet: `kon` og `hojde`. Den tredje kodelinje nedenfor viser, hvordan man kan gøre dette.
+ 
+```{r}
+library(readxl)
+studData2 <- read_excel("../data/stud2017-v2.xls")
+studData2 <- studData2[,  c("kon", "hojde")]
+head(studData2)
+table(studData2$kon)
+```
+
+Vi ønsker blandt andet at se på datasættet separat for mænd og kvinder. Nedenfor vises to metoder til at opsplitte data i to.
+
+Ved brug af funktioner fra R standardinstallationen.
+
+```{r}
+kData <- subset(studData2, kon=="Kvinde")
+mData <- subset(studData2, kon=="Mand")
+```
+
+Ved brug af funktioner fra R pakkerne i `tidyverse`.
+
+```{r message = F}
+library(tidyverse)
+kData <- filter(studData2, kon == "Kvinde") 
+mData <- filter(studData2, kon=="Mand")
+```
+
+
+***
+
+
+## Histogram over kvinders højder
+
+Vi beregner middelværdi og spredning for højdemålingerne af kvinder i datasættet.
+
+```{r}
+mean(kData$hojde)
+sd(kData$hojde)
+```
+
+**Vigtigt:** R nægter at angive gennemsnittet og spredningen for højdemålingerne. Dette skyldes, at der mangler en måling (*missing value*) i datasættet. Derfor beder vi i beregningen nedenfor R om at se bort fra manglende observationer ved beregning af middelværdi og spredning.
+
+```{r}
+meanK <- mean(kData$hojde, na.rm = T)
+meanK ### gennemsnitshojde i cm
+sdK <- sd(kData$hojde, na.rm = T)
+sdK ### spredning på hojderne (i cm)
+```
+
+Nedenfor indtegnes et histogram for højdemålingerne af kvinder. Oven i histogrammet indtegnes *tætheden* for en normalfordeling med samme middelværdi og spredning som i datasættet (som beregnet ovenfor).
+
+```{r}
+hist(kData$hojde, prob = TRUE, xlab = "Hojde", main = "Kvinder", col = "lightgrey")
+f1 <- function(x) dnorm(x, mean = meanK, sd = sdK)
+plot(f1, 150, 190, col = "red", add = TRUE, lwd = 3)  
+```
+
+Kommentarer
+
+* Det er væsentligt, at histogrammet laves med `prob = T`, hvilket sikrer at arealet af alle kasserne er lig med 1.
+
+* Den optegnede tæthed (røde kurve) er blot tæthedsfunktionen der svarer en normalfordeling med middelværdi og spredning som i datasættet. Den konkrete tæthed står på slide 19 til dagens forelæsning (og er kaldt `f1` i R koden ovenfor).
+
+* Den naturlige reaktion på figuren bør være, at *det var godt nok imponerede så flot normalfordelingen ligner (dvs. approksimerer) histogrammet*.
+
+***
+
+## Beregning af sandsynligheder og fraktiler i en normalfordeling
+
+Vi antager nu, at Y beskriver udfaldet af en kontinuert variabel og at variationen i Y er perfekt beskrevet med en normalfordeling med middelværdi 168.63 og spredning 6.64 (dvs. varians  6.64 * 6.64).
+
+Her vises, hvordan man kan udregne forskellige sandsynligheder knyttet til Y, ved at *slå op i tabeller* for normalfordelingen. 
+
+```{r}
+### P(Y <= 160)
+pnorm(160, mean=168.52, sd=6.64) 
+
+### P(Y <= 155)
+pnorm(155, mean=168.52, sd=6.64) 
+
+### P(Y < 155 <= 160)
+pnorm(160, mean=168.52, sd=6.64) - pnorm(155, mean=168.52, sd=6.64) 
+
+### P(Y <= 160) via N(0,1)-fordelt variabel Z:
+z <- (160-168.52)/6.64
+pnorm(z) 
+
+```
+
+90 % - fraktilen for Y er det tal b, så P(Y <= b) = 0.90. I R kan dette tal bestemmes som
+
+```{r}
+### 90%-fraktil i N(168.52, 6.64^2), dvs tal b så P(Y <= b) = 0.90
+qnorm(0.90, mean=168.52, sd=6.64)
+```
+
+***
+
+## QQ-plots: hvornår ligner data faktisk en normalfordeling?
+
+For at undersøge, hvor godt data ligner (dvs. kan approksimeres med) en normalfordeling kan man som alternativ til ovenstående (dvs histogram + indtegnet tæthed) i stedet tegne et såkaldt *QQ-plot*.
+
+Hvis data faktisk stammer fra en normalfordeling, så bør punkterne på et QQ-plot ligge tilnærmelsesvis omkring en ret linje. For den bedste rette linje vil hældning og skæring af linjen svare til middelværdi og spredning af data. 
+
+Histogramer for højdemålinger af kvinder og mænd ses nedenfor. Bemærk, at der også vises to metoder til beregning af middelværdi og spredning af højdemålingerne opdelt på køn.
+
+```{r}
+mean(kData$hojde, na.rm = T)
+sd(kData$hojde, na.rm = T)
+mean(mData$hojde, na.rm = T)
+sd(mData$hojde, na.rm = T)
+
+group_by(studData2, kon)%>%
+  summarise(antal = n(), mean_hojde = mean(hojde, na.rm = T), sd_hojde = sd(hojde, na.rm = T))
+```
+
+
+```{r , fig.height=4, fig.width=8}
+par(mfrow=c(1,2))
+qqnorm(kData$hojde, main="Kvinder")
+abline(168.52, 6.64, col="red", lwd=3)
+
+qqnorm(mData$hojde, main="Maend")
+abline(182.7, 5.54, col="blue", lwd=3)
+```
+
+Den store udfordring ligger i at afgøre, hvor tæt punkter på linjen bør følge den rette linje for at det er godt nok. Dette afhænger i første omgang af, hvor mange datapunkter der er. Selv i den perfekte verden (hvor data stammer fra en normalfordeling), så vil der være en større variation/usikkerhed i QQ-plottets udseende, hvis man baserer det på få fremfor mange data.
+
+Den bedste løsning er at simulere/frembringe nogle datasæt *fra en perfekt normalfordeling* som er af samme størrelse som det observerede datasæt. Så kan vi jo direkte optegne QQ-plot for de perfekte datasæt, og se om det observerede QQ-plot falder inden for den usikkerhed/variation, som man vil forvente.
+
+Nedenfor har vi gjort følgende
+
+* Simuleret 8 datasæt hver med 104 observationer og middelværdi = 168.52 og spredning = 6.64. Dette svarer præcis til højdemålingerne for kvinderne i datasættet.
+
+* For hvert af de 8 datasæt har vi optegnet et QQ-plot med en linje med hældning 6.64 og skæring 168.52.
+
+* I midten har vi placeret det QQ-plot, som stammer fra de observerede data.
+
+```{r}
+set.seed(2019)
+par(mfrow = c(3,3))
+for(i in 1:4){
+  tmp_hojde <- rnorm(n = 104, mean = 168.52, sd = 6.64)
+  qqnorm(tmp_hojde)
+  abline(168.52, 6.64, col = "red", lwd = 3)
+}
+qqnorm(kData$hojde, main="Kvinder")
+abline(168.52, 6.64, col="red", lwd=3)
+for(i in 1:4){
+  tmp_hojde <- rnorm(n = 104, mean = 168.52, sd = 6.64)
+  qqnorm(tmp_hojde)
+  abline(168.52, 6.64, col = "red", lwd = 3)
+}
+
+```
+
+**Konklusion:** Når man kigger på de 9 QQ-plot, så springer det midterste plot (svarende til de *rigtige data*) ikke i øjnene. Variationen omkring den rette linje er ikke markant større eller anderledes end for de 8 figurer, som er baseret på data, der er trukket fra en perfekt normalfordeling. Dette er et meget stærkt argument for, at vi med rimelighed kan beskrive variationen af vores data ved en normalfordeling.
+
+Lidt hjælp til R koden ovenfor
+
+* `set.seed(2019)`: metoden består i at vi lader R generere (tilfældigt)  nogle datasæt. Det ville være lidt frustrerende, hvis vi ikke kunne reproducere og få præcis de samme resultater, hver gang vi kørte R koden. Derfor kan man ved at vælge et bestemt `seed` sikre, at resultaterne ser ens ud hver gang. Det står dig frit for at ændre `2019` til noget andet. 
+
+* `par(mfrow = c(3,3))`: splitter grafikvinduet op i 9 vinduer arrangeret i et 3 x 3 gitter
+
+* `tmp_hojde <- rnorm(n = 104, mean = 168.52, sd = 6.64)`: denne linje simulerer/genererer tilfældig et datasæt med 104 normalfordelte observationer med middelværdi 168.52 og spredning 6.64
+
+* `for(i in 1:4){ ... }` sørger for at gentage R kode (angivet ved `...`) 4 gange. Jeg ønsker her først at lave 4 figurer med simulerede data, dernæst figuren med *rigtige data* og til sidst 4 figurer med simulerede data. 
+
+
+***
+
+## Simulationer til illustration af Infobox 4.2
+
+
+Der er en række egneskaber med normalfordelingen, som er helt essentielle, når man benytter normalfordelingsmodeller i forbindelse med statistiske analyser. 
+
+En af de vigtigste egenskaber er, hvad der sker, når man lægger resultatet af normalfordelte variable sammen. Vi illustrerer her ved et simulationseksperiment, at når man lægger resultatet af to variable, som begge er normalfordelte sammen, så kan resultatet (dvs. sumvariablen) igen beskrives ved en normalfordeling. Og man skal blot lægge middelværdier og varianser sammen, for at finde ud af, hvilken normalfordeling, der bedste beskriver summen. 
+
+```{r, fig.height=3, fig.width=9}
+par(mfrow=c(1,3))
+### Simulationer svarende til kvinder (y), mænd (x), summen (z)
+y <- rnorm(1000, mean=168.52, sd=6.64)
+x <- rnorm(1000, mean=182.7, sd=5.54)
+z <- x + y
+
+### De tilhørende N-tætheder
+f1 <- function(y) dnorm(y, 168.52, 6.64)
+f2 <- function(x) dnorm(x, 182.7, 5.54)
+f3 <- function(z) dnorm(z, 168.52+182.7, sqrt(6.64^2+5.54^2))
+
+### Histogrammer
+hist(y, prob=TRUE, main="Kvinder", xlab="Højde")
+plot(f1, 145, 190, add=TRUE, lwd=3, col="red")
+hist(x, prob=TRUE, main="Maend", xlab="Højde")
+plot(f2, 150, 200, add=TRUE, lwd=3, col="blue")
+hist(z, prob=TRUE, main="Maend + kvinder", xlab="Højde")
+plot(f3, 325, 380, lwd=3, col="green", add=TRUE)
+
+### QQ-plots
+qqnorm(y, main="Kvinder")
+abline(168.52, 6.64, col="red", lwd=3)
+qqnorm(x, main="Maend")
+abline(182.7, 5.54, col="blue", lwd=3)
+qqnorm(z, main="Maend + kvinder")
+abline(168.52+182.7, sqrt(6.64^2+5.54^2), col="green", lwd=3)
+```
+
+Både histogrammer og QQ-plots viser at summen (Z=X+Y) har den fordeling som vi forventer udfra Infobox 4.2.
+
+
+På et mere praktisk plan, så giver de pæne regneregler for normalfordelingen gode muligheder for at fortage analyser der involverer komplekse data med mange forklarende variable, hvor det ikke umiddelbart er oplagt, hvordan man skal vægte de enkelte målinger i forhold til hinanden.
+
+# Eksempel: Marker (uden brug af lineal) to punkter med afstanden 8 cm
+
+Ved forelæsningen i Statistisk Dataanalyse 1 d. 8/9-2021 fik de studerende udleveret et blank seddel med en af farverne: grøn, gul, rød og blå. De blev bedt om at markere to punkter, som de på øjemål vurderede til at have en indbyrdes afstand på ca. 8 cm. Der blev returneret 
+
+* 21 blå
+* 42 gule
+* 47 røde
+* 41 grønne
+
+Der blev således totalt indsamlet 151 sedler (der kan dog sagtens være nogle blanke sedler).
+
+Der blev tilfældigt udvalgt 20 sedler og sedlens farve samt afstanden mellem de to punkter blev noteret og gemt i filen `gaet8.txt`.
+
+## Indlæsning af data
+
+Data indlæsning i R
+
+```{r}
+my_data <- read.table(file = "../data/gaet8.txt", header = F)
+head(my_data, 5)
+```
+
+Variablene navngives
+
+```{r}
+names(my_data) <- c("farve", "afstand")
+head(my_data)
+```
+## Histogram og sammenligning med normalfordeling
+
+Der optegnes et histogram, og der indtegnes en tæthed for den *bedste* normalfordelingstæthed (middelværdi = `r mean(my_data$afstand)`, spredning = `r sd(my_data$afstand)`).
+
+```{r}
+hist(my_data$afstand, prob = TRUE, xlab = "Afstand ml. punkter", main = "Baseret på 20 tilfældigt udvalgte sedler", col = "lightgrey")
+f1 <- function(x) dnorm(x, mean = mean(my_data$afstand), sd = sd(my_data$afstand))
+plot(f1, 1, 15, col = "red", add = TRUE, lwd = 3)  
+```
+Kommentarer:
+
+* Tætheden (rød kurve) passer ikke supergodt med histogrammet ....
+
+* Histogrammet er dog baseret på meget få målinger, så det vil aldrig ligne en kontinuert kurve særlig godt ,,,,
+
+## QQ-plot og sammenligning med normalfordeling
+
+Vi gør i stedet følgende:
+
+* optegner et QQ-plot for målingerne af de 20 afstande
+* indtegner en ret linje på QQ-plottet med *hældning = spredning* og *skæring = gennemsnit*
+
+```{r}
+qqnorm(my_data$afstand)
+abline(a = mean(my_data$afstand), b = sd(my_data$afstand))
+```
+Lad være med blot at skrive **"Det ser meget pænt ud!"**
+
+Skriv istedet noget i retning af:
+
+* Vi undersøger om punkterne på QQ-plottet afviger mere fra den rette linje end man ville forvente, hvis data faktisk var trukket fra en normalfordeling. 
+
+Hvis du gerne vil undersøge, hvor pænt det ville se ud, hvis data var trukket fra en rigtig normalfordeling, så skal du overveje følgende
+
+* hvor mange målinger er der i datasættet? (her = 20)
+* hvad er middelværdi af målingerne? (her = `r mean(my_data$afstand)`)
+* hvad er spredning af målingerne? (her `r sd(my_data$afstand)`)
+
+Kør nu følgende kode
+
+```{r}
+set.seed(2021)
+simdata <- rnorm(n = 20, mean = mean(my_data$afstand), sd = sd(my_data$afstand))
+qqnorm(simdata)
+abline(a = mean(my_data$afstand), b = sd(my_data$afstand))
+```
+Kommentarer:
+
+* Jeg benytter her `set.seed(2021)` til at sikre, at de simulerede data er ens, hver gang jeg kører mit R-program. Du opfordres til at køre koden med flere forskellige valg af `set.seed(...)`, så du har en fornemmelse for, hvor meget resultatet kan variere. 
+
+* Figurer viser vist med al tydelighed, at målingerne ligger lige så pænt om en ret linje som de simulerede data. Konklusionen er at vores målinger af afstandene mellem de to punkter på papiret fint kan beskrives med en normalfordeling.
