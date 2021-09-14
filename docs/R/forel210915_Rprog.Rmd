@@ -1,5 +1,5 @@
 ---
-title: 'StatData1: forel200909'
+title: 'StatData1: forel210915'
 author: "Anders Tolver"
 output:   
   html_document:
@@ -12,9 +12,7 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-
 ***
-
 
 # Gennemsnit for en stikprøve (mean of one sample)
 
@@ -34,7 +32,7 @@ Vi når ikke igennem alle detaljer ved dagens forelæsning, men det bør også v
 
 De første to eksempler repræsenterer nogle pæne/lette situationer. De to sidste eksempler går i dybden med nogle lidt mere udfordrende (men vigtige) ting.
 
-Vær opmærksom på, at dele af programmet også vil blive diskuteret i den video, der opsummerer undervisningen i kursusuge 2 (uploades onsdag eftermiddag). Til analysen af det sidste eksempel (gæt antal punkter) benyttes R koden fra Helle Sørensen (tidl. underviser) stort set uændret.
+Vær opmærksom på, at dele af programmet også vil blive diskuteret i den video, der opsummerer undervisningen i kursusuge 2 (uploades onsdag eftermiddag). Til analysen af det sidste eksempel (gæt antal punkter) benyttes R koden fra Helle Sørensen (tidl. underviser) stort set uden uændringer.
 
 
 ***
