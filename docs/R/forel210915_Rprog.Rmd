@@ -1,0 +1,497 @@
+---
+title: 'StatData1: forel200909'
+author: "Anders Tolver"
+output:   
+  html_document:
+    theme: sandstone
+    toc: true
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+***
+
+
+# Gennemsnit for en stikprøve (mean of one sample)
+
+I dette dokument diskuteres metoder til at estimere middelværdien i en population på baggrund af en (lille) stikprøve fra populationen. Desuden illustres forskellige andre pointer fra lærebogens kapitel 4 og kapitel 5.3.
+
+Vi arbejder med 4 forskellige datasæt
+
+* Højdemålinger for kvinder på StatData1 i 2017: standardberegning med pænt normalfordelte målinger
+
+* Målinger af anstand mellem to punkter indsamlet på baggrund af studerende på StatData1 i 2021 (formål var at *ramme* en afstand på 8 cm).Typisk transporttid fra bopæl til Frederiksberg Campus for studerende på StatData1 i 2020: beregninging af konfidensinterval, hvor der trækkes på den centrale grænseværdisætning
+
+* Typisk transporttid fra bopæl til Frederiksberg Campus for studerende på StatData1 i 2020: beregninging af konfidensinterval, hvor der trækkes på den centrale grænseværdisætning
+
+* Gæt antal punkter på en figuren (Eksperiment med studerende på StatData1 i 2017): brug af normalfordeling på logaritme-transformerede data
+
+Vi når ikke igennem alle detaljer ved dagens forelæsning, men det bør også være muligt at få rigtig meget ud af, at læse de resterende ting igennem selv derhjemme. 
+
+De første to eksempler repræsenterer nogle pæne/lette situationer. De to sidste eksempler går i dybden med nogle lidt mere udfordrende (men vigtige) ting.
+
+Vær opmærksom på, at dele af programmet også vil blive diskuteret i den video, der opsummerer undervisningen i kursusuge 2 (uploades onsdag eftermiddag). Til analysen af det sidste eksempel (gæt antal punkter) benyttes R koden fra Helle Sørensen (tidl. underviser) stort set uændret.
+
+
+***
+
+## Højdemålinger for kvinder på StatData1 i 2017
+
+Vi indlæser et datasæt bestående af selvrapporterede højder (i cm) for studerende på StatData1 i 2017. Data er indsamlet af Helle Sørensen. Ved indlæsning af data skal du være opmærksom på at ændre stien til `read_excel()`, så den peger på det sted, hvor du har gemt datafilen `stud2017-v2.xls`.
+
+Bemærk at vi kun udvælger to variable fra datasættet: `kon` og `hojde`. Den tredje kodelinje nedenfor viser, hvordan man kan gøre dette. Desuden laves et datasæt, som kun indeholder højden af kvinder i datasættet.
+
+```{r}
+library(readxl)
+studData2 <- read_excel("../data/stud2017-v2.xls")
+studData2 <- studData2[,  c("kon", "hojde")]
+
+### Data for kvinder
+kData <- subset(studData2, kon=="Kvinde")
+```
+
+Vi har tidligere set, at kvindernes højdemålinger er godt beskrevet ved en normalfordeling.
+
+### Konfidensinterval for gennemsnitshøjden i populationen af kvinder
+
+Vi udregner gennemsnit og spredning for de 104 højdemålinger i stikprøven
+
+```{r}
+### Gennemsnit of stikprævespredning
+mean(kData$hojde, na.rm=TRUE)
+sd(kData$hojde, na.rm=TRUE)
+```
+
+Vi bruger derefter formlen fra Kap. 5.3.2 til at udregne et interval estimat (her: 95 % - konfidensinterval) for gennemsnitshøjden i hele populationen af kvinder ud fra vores lille stikprøve fra StatData1 i 2017.
+
+Hertil har vi brug for
+
+* gennemsnit og spredning for stikprøven (udregnet ovenfor)
+* antallet af frihedsgrader: her `df = N - 1` hvor N er stikprøvens størrelse (her: N = 104)
+* 97.5 % - fraktilen i en t-fordeling med `df` frihedsgrader
+
+Beregning af t-fraktil
+
+```{r}
+### t-fraktil
+qt(0.975, df=103)
+```
+
+Bereging af nedre og øvre grænse for 95 % - konfidensinterval
+
+
+```{r}
+### Nedre og øvre grænse, manuelt
+168.524 - 1.9833 * 6.639972/sqrt(104)
+168.524 + 1.9833 * 6.639972/sqrt(104)
+```
+
+R kommandoerne `t.test` og `lm` kan også benyttes til udregning af et konfidensinterval for gennemsnittet i en population beregning på baggrund af en stikprøve.
+
+```{r}
+### Vha. t.test
+t.test(kData$hojde)
+
+### Vha. lm
+model <- lm(hojde ~ 1, data=kData)
+summary(model)
+confint(model)
+```
+
+***
+
+## Marker to punkter - forsøg at ramme en afstand på 8 cm
+
+Vi indlæser datasættet indsamlet ved forelæsningen d. 8/9-2021
+
+* 20 målinger af afstanden ml. mellem to punkter afsat på et farvet stykke papir
+* instruksen var at man skulle prøve at ramme en afstand på 8 cm
+
+Vi har tidligere set, at afstandsmålingerne er velbeskrevet af en normalfordeling.
+
+
+```{r}
+my_data <- read.table("../data/gaet8.txt", header = F)
+head(my_data)
+names(my_data) <- c("farve", "afstand")
+```
+
+
+### Konfidensinterval for gennemsnitlig afstand i populationen af alle studerende på StatData1
+
+* Data: stikprøve $y_1, \ldots, y_20$ af målinger af afstande (kvantitativ, kontinuert)
+
+* Statistisk model: vi antager at stikprøve er uafhængige observationer fra en normalfordeling
+    - $\mu$: betegner den ukendte middelværdi i hele populationen
+    - $\sigma$: betegner den ukendte spredning i hele populationen
+    - vores interesseparameter (target) er $\mu$
+    
+* Estimator: ud fra stikprøven udregnes estimaterne for de ukendte parametre
+
+```{r}
+mean(my_data$afstand) # estimat for middelværdi
+sd(my_data$afstand) # estimat for spredning
+```
+
+* Standard error på estimator for middelværdi: fra Infobox 4.3 i lærebogen ved vi at spredning for estimatoren $\hat \mu = \overline y$ for $\mu$ er $\sigma/\sqrt{20}$ dvs.
+
+```{r}
+sd(my_data$afstand)/sqrt(20) # estimat for spredning på gennemsnit
+```
+
+* Konfidensinterval: Hertil har vi brug for
+        - gennemsnit og spredning for stikprøven (udregnet ovenfor)
+        - antallet af frihedsgrader: her `df = N - 1` hvor N er stikprøvens størrelse (her: N = 20)
+        - 97.5 % - fraktilen i en t-fordeling med `df` frihedsgrader
+
+Beregning af t-fraktil
+
+```{r}
+### t-fraktil
+qt(0.975, df = 20 - 1)
+```
+
+Konfidensintervallet bliver
+
+```{r}
+mean(my_data$afstand) + c(-1, 1) * qt(0.975, df = 20 - 1) * sd(my_data$afstand)/sqrt(20)
+```
+
+**Fortolkning:** På baggrund af stikprøven fås et 95 % - konfidensinterval på (7.09; 9.05) cm. Vores vurdering er, at dette interval med 95 %  sandsynlighed vil omfatte den sande (men ukendte) værdi af middelværdien i hele populationen. Specielt kan man ikke på baggrund af stikprøven udelukke, at de studerende på StatData1 i gennemsnit har angivet afstanden til at være 8.0 cm. 
+
+***
+
+## Transportid fra bopæl til Frederiksberg Campus
+
+Ved forelæsningen d. 31/8-2020 på StatData1 i 2020 blev der indsamlet et lille datasæt, hvor en del af de studerende blev besvarende følgende spørgsmål 
+
+> Hvor mange minutter bruger du normalt på at transportere dig fra din bopæl til Frederiksberg Campus?
+
+Datasættet `transporttid.txt` indeholder bl.a. målinger af transporttid fra bopæl til campus (`transporttid`). 
+
+```{r}
+data <- read.table("../data/transporttid.txt", header = T)
+```
+
+Lad os benytte datasættet til at komme med et bud på den gennemsnitlige transporttid for populationen af alle studerende på SD1.
+
+Det er let at beregne gennemsnittet i vores sample og benytte dette som *punktestimat* ...
+
+```{r}
+mean(data$transporttid)
+```
+
+men vi ønsker også at komme med et *interval estimat* (dvs. et konfidensinterval), der siger noget om usikkerheden, når vi prøver at overføre gennemsnittet fra vores lille sample til et bud på gennemsnittet for hele populationen af studerende
+
+### Kan målingerne beskrives ved en normalfordeling?
+
+Vi laver et histogram og et QQ-plot som vi lærte ved forelæsningen d. 13/9-2021.
+
+```{r}
+par(mfrow = c(1, 2))
+hist(data$transporttid, prob = TRUE, xlab = "Transporttid til Campus (i min)", main = "Studerende paa StatData1 i 2020", col = "lightgrey")
+qqnorm(data$transporttid, main="Studerende paa StatData1 i 2020")
+abline(mean(data$transporttid), sd(data$transporttid), lwd = 3, col = "red")
+```
+
+**Konklusion:** Målingerne af transporttid fra bopæl til campus kan absolut ikke beskrives med en normalfordeling.
+
+Formlerne i lærebogens Kap. 5.3 der angiver, hvordan vi skal lave et konfidensinterval for gennemsnittet er udledt under den antagelse, at målingerne i vores stikprøve kan betragtes som *uafhængige observationer fra en normalfordeling*. Betyder det, at vi ikke kan formlerne til beregning af konfidensintervaller for den gennemsnitlige transporttid fra bopæl til campus?
+
+### Kan gennemsnit af stikprøven beskrives ved en normalfordeling?
+
+**Advarsel: Indeholdet i dette afsnit er en smule langhåret!**
+
+Der er to ting som gør, at vi alligevel godt kan bruge lærebogens Kapitel 5.3 til konstruktion af et konfidensinterval i eksemplet med de studerendes studiejob.
+
+* 1. metoden/formlen kræver faktisk kun at stikprøve-gennemsnit ligner en normalfordeling (og ikke at de enkelte målinger er normalfordelte)
+
+* 2. den **centrale grænseværdisætning** sikrer at stikprøve-gennemsnit af tilstrækkelig store stikprøver ligner en normalfordeling
+
+Vores datasæt består af 176 målinger, hvilket må betragtes som en rimelig stor stikprøve, så der er god grund til at tro, at vi blot kan beskrive gennemsnittet ved en normalfordeling.
+
+Til illustration af pointen kan vi lave et legetøjseksperiment. Eksemplet viser hvordan computeren kan bruges til at lave simulationseksperimenter. Detaljerne er ikke pensum, men det er bestemt inden for rækkevidde for den ambitiøse studerende, at lære denne teknik selv. 
+
+Lad os for et øjeblik antage at de 176 målinger udgør den fulde population, som vi interesserer os for. 
+
+Histogrammet her ...
+
+```{r}
+hist(data$transporttid, prob = TRUE, xlab = "Transporttid til Campus (i min)", main = "Studerende paa StatData1 i 2020", col = "lightgrey")
+```
+
+... viser som tidligere nævnt, at denne legetøjspopulation ikke kan beskrives ved en normalfordeling.
+
+
+Følgende R kode gør følgende
+
+* udtrækker tilfældigt en stikprøve på 10 målinger fra legetøjspopulationen
+* udregner gennemsnittet af de 10 målinger fra stikprøven
+* gentager processen (dvs. udtrækningen) 500 gange, og optegner et histogram og et QQ-plot til beskrivelse af gennemsnittene med en normalfordeling
+
+```{r}
+set.seed(2019)
+B <- 100
+mean_toy <- rep(NA, B)
+for(b in 1:B){
+  mean_toy[b] <- mean(sample(data$transporttid, size = 10, replace = T))
+}
+
+par(mfrow = c(1, 2))
+hist(mean_toy, prob = TRUE, xlab = "Gennemsnitlig transporttid (i min)", main = "Legetoejspopulation", col = "lightgrey")
+f1 <- function(x) dnorm(x, mean = mean(mean_toy), sd = sd(mean_toy))
+plot(f1, 1000, 6000, col = "red", add = TRUE, lwd = 3)  
+qqnorm(mean_toy, main="Legetoejspopulation")
+abline(mean(mean_toy), sd(mean_toy), lwd = 3, col = "red")
+```
+
+**Konklusion:** Vi ser at gennemsnit for en stikprøve af størrelse 10 i langt bedre grad kan beskrives ved en normalfordeling, en hvis vi betragter de enkelte (176) målinger. Det er bestemt ikke lige så pænt, som da vi betragtede højdemåingerne for kvinder på StatData1  i 2017. Vi bør dog huske på, at vi i praksis interesserer os for gennemsnittet af transporttiden til Campus i hele populationen af studerende, og at vi i praksis beregner et gennemsnit af 176 målinger (modsat kun 10 i stikprøverne i legetøjseksperimentet). Vi kan derfor regne med, at vores gennemsnit af 176 målinger vil ligne en normalfordeling endnu mere end de to figurer fra legetøjseksperimentet.
+
+
+Således oplyst vover vi pelsen og bruger alligvel formlen fra lærebogens kapitel 5.3 til at beregne et 95 % konfidensinterval for den gennemsnitlige transporttid til campus for populationen af alle studerende.
+
+
+### Konfidensinterval for gennemsnitlig transporttid til campus i populationen af studerende
+
+Punktestimatet for den gennemsnitlige transporttid til campus er
+
+```{r}
+mean(data$transporttid)
+```
+
+
+Til bestemmelse af konfidensintervallet for estimatet har vi brug for en passende  t-fraktil
+
+```{r}
+### t-fraktil
+qt(0.975, df = 176 - 1)
+```
+
+Beregning af øvre og nedre grænse for 95 % konfidensinterval
+```{r}
+### Nedre og øvre grænse, manuelt
+mean(data$transporttid) - 1.973691 * sd(data$transporttid) /sqrt(176)
+mean(data$transporttid) + 1.973691 * sd(data$transporttid) /sqrt(176)
+```
+
+Hvis vi ellers kan regne med at målingerne i vores stikprøve er repræsentativ for hele studenterpopulationen, så vil estimatet 26.4 minutter samt 95 % - konfidensintervallet 23.0 - 29.8 minutter være et bud på denne gennemsnitlige transporttid til Campus for alle studerende.
+
+***
+
+## Gæt på antallet af punkter (benyttes også ved regneøvelser)
+
+På Statistisk Dataanalyse 1 i 2017 viste Helle Sørensen de studerende tre punktplot og bad dem gætte på antallet af punkter i hver figur. De fik cirka 5 sekunder til at se på hver figur inden de skulle gætte. 
+
+* Figurerne er vist i opgave HS.11, og det sande antal punkter er 86, 142 og 47.
+
+* De studerendes gæt er tilgængelige i filerne `punktplot2017.xlsx` og `punktplot2017.txt`. Der er gæt fra 143 studerende. 
+
+Vi er interesserede i om _man/folk_ i gennemsnit gætter korrekt på antal punkter i et punktplot, eller om man/folk i gennemsnit gætter for lavt eller højt. Mere præcist:
+
+* Vi ser på gættene på en figur ad gangen - lad os bruge figur 1 som eksempel.
+
+* Vi tænker på en generel population (uden at specificere præcis hvilken, men det kunne måske være unge danskere mellem 20 og 25 år), og tænker på de 143 gæt som en enkelt stikprøve. 
+
+* Vi vil bruge stikprøven til at lave et estimat og et konfidensinterval for det typiske gæt (i populationen).
+Det intereessante er så om det sande antal punkter - 86 for figur 1 - ligger i konfidensintervallet eller ej. 
+
+### Indlæsning af tekstfilen punktplot2017.txt
+
+Du kan benytte forskellige metoder til indlæsning af datasættet `punktplot2017.txt`. Du kan fx. gøre følgende:
+
+1. Skift _Working directory_ til den mappe hvor du har lagt datafilen. Du gør det nemmest via _Session_ menuen, vælg _Set Working Directory_ -> _Choose Directory_ og klik på den ønskede mappe. Når du klikker `Open`, så kører R en kommando af formen `setwd(...)`. Kopier denne linje ind i dit R script eller den relevante *code chunk* i dit R Markdown dokument. På min computer kan nedenstående `setwd`-kommando benyttes.
+
+2. Brug dernæst `read.table` kommandoen nedenfor. Argumentet `header = TRUE` angiver at den første linie skal bruges som variabelnavne. 
+
+```{r}
+setwd("../data")
+dat1 <- read.table('punktplot2017.txt', header=TRUE)
+```
+
+Datasættet dat1 skulle gerne optræde i _Environment_ vinduet (øverst til højre). Checker at datasættet ser ud som forventet, fx med følgende kommando og/eller plots:
+
+```{r}
+summary(dat1)
+```
+
+
+### Figur 1: Analyse FØR transformation
+
+Vi glemmer først opgave HS.11 et øjeblik... 
+
+* Vi antager at gættene på antal punkter i figur 1 er uafhængige og normalfordelte med middelværdi $\mu$ og spredning $\sigma$. Middelværdien er populationsgennemsnittet, altså det gennemsnitlige gæt hvis vi spurgte alle i hele populationen. Det behøver _ikke_ at være det samme som det faktiske antal punkter i figuren. Faktisk er det en interessant hypotese om det er tilfældet. Hvis populationsmiddelværdien _ikke_ er lig det sande antal punkter, betyder det at folk har en tendens til at over- eller underestimere antallet af punkter.
+
+* Estimat, SE og 95% konfidensinterval kan fx bestemmes vha. `lm` som vist nedenfor.
+
+* Estimatet er blot gennemsnittet på 70.69 (SE 1.97) med 95% konfidensinterval (66.8 , 74.6). Det er således populationsgennemsnit mellem 66.8 og 74.6 der er i overensstemmelse med data. Det sande antal punkter (86) ligger ikke i KI, og er altså _ikke_ i god overensstemmelse med data. _Hvis_ folk i gennemsnit gætter korrekt, så er det ikke sandsynligt at få data som dem vi har fået. Med andre ord: Data tyder på at man generelt set gætter for lavt. 
+
+```{r}
+m1 <- lm(figur1 ~ 1, data=dat1)
+summary(m1)
+confint(m1)
+```
+
+
+### Problem: målingerne er ikke vel beskrevet ved en normalfordeling
+
+Som udgangspunkt baserer udledningen af formlen for konfidensintervallet sig på nogle modelantagelser:
+
+* Observationerne bør forhåbentlig være nogenlunde uafhængige (se dog nedenfor)
+
+* Normalfordelingsantagelsen checkes med et QQ_plot (som i opgave HS.11):
+
+```{r, fig.height=4, fig.width=4}
+qqnorm(dat1$figur1)
+abline(mean(dat1$figur1), sd(dat1$figur1), col="red")
+```
+
+* Det set faktisk ikke helt godt ud! Prøv evt. selv at sammenligne med QQ-plot for simulerede normalfordelte data som i opgave 4.5, nu med n=143.
+
+* Histogrammet nedenfor viser hvad der er problemet: Fordelingen er skæv. Der er relativt mange der gætter temmelig højt, men ikke tilsvarende mange der gætter meget lavt. 
+
+```{r, fig.height=4, fig.width=4}
+hist(dat1$figur1)
+```
+
+**Vigtigt:** Som beskrevet detaljeret i eksemplet ovenfor med transporttid til Campus, så *kan den centrale grænseværdisætning ofte redde os* når vi blot interesserer os for at estimere gennemsnittet i et population: gennemsnit af mange målinger vil ofte være approksimativt normalfordelte, så det beregnede konfidensintervallet for gennemsnittet er sikkert fornuftigt nok.
+
+Dog kan man med rette diskutere, om middelværdien/gennemsnittet i populationen er et relevant mål for centrum i fordelingen, når fordelingen er så skæv som på histogrammet (se eventuelt diskussionen i lærebogens kapitel 1.4.4).
+
+
+Et standardtrick i denne situation er at log-transformere data.  Vi prøver derfor at lave QQ-plots og histogrammer for den log-transformerede variabel. Husk at log-funktionen i R er den naturlige logaritme.
+
+```{r, fig.height=4, fig.width=8}
+par(mfrow=c(1,2))
+qqnorm(log(dat1$figur1))
+abline(mean(log(dat1$figur1)), sd(log(dat1$figur1)), col="red")
+hist(log(dat1$figur1))
+```
+
+* Det ser meget bedre ud! "Miraklet" indtræffer fordi log-funktionen presser de høje værdier mere sammen end de små værdier. 
+
+* Vi arbejder derfor videre med de log-transformerede data.
+
+
+### Fortolkning af parametre ved log-transformation
+
+Vi vælger altså at analysere _den naturlige logarime til gættene_! Mere præcist:
+
+* Vi antager at _den naturlige logarime til gættene_ er uafhængige og normalfordelte. 
+
+* Lad os kalde middelværdien i fordelingen af log(antal) for $\gamma$ (gamma) for at kunne skelne den fra middelværdien af de ikke-transformerede gæt. 
+
+* Man skal holde tungen lige i munden mht. fortolkningen af middelværdiparameteren $\gamma$. Det er altså populationsmiddelværdien for logaritmen til antal gæt. Vi bruger også ordet _den forventede værdi_ (expected value) for log(gæt) og skriver
+$$
+  E \bigl( log(gæt) \bigr) = \gamma
+$$
+* Man kunne tro at $\gamma$ skulle fortolkes som logaritmen til middelværdien af gættet (før transformation), men det er _forkert_! I stedet kan man tænke i baner af medianer.
+
+* Medianen i en fordeling (populationsmedianen) er den værdi hvor halvdelen af sandsynligheden ligger til venstre for værdien, og den anden halvdel til højre. Normalfordelingen er symmetrisk om sin middelværdi, så derfor er median og middelværdi ens i normalfordelingen. 
+
+* Vi har altså at både median og middelværdi for log(gæt) er lig $\gamma$:
+$$
+    E \bigl( log(gæt) \bigr) = \text{Median} \bigl( log(gæt) \bigr) = \gamma
+$$
+Fordelingen for gæt (utransformeret) er derimod skæv, så her er median og middelværdi _ikke_ ens.
+
+* Jeg skrev ovenfor at middelværdien ikke "følger" med ved transformation. Det gør medianen derimod! Så hvis $\gamma$ er medianen for log(gæt), så er $e^\gamma$ median for gæt. Husk nemlig at log er den naturlige logaritme som "ophæves" af exp. Altså:
+$$
+     \text{Median} \bigl( gæt \bigr) = e^\gamma
+$$
+Fremgangsmåden er nu følgende: 
+
+* Man beregner estimat og konfidensinterval for $\gamma$ ved at regne på de log-transformerede data. Derefter transformerer man både estimat og endepunkterne i konfidensintervallet med exp. 
+
+* Resultaterne tolkes som estimat og konfidensinterval for _medianen_ i fordelingen af gættet. 
+
+### Analyse EFTER transformation
+
+* Vi kører `lm` på de transformerede data
+
+* Estimat for middelværdien/medianen for log(gæt) er 4.205 (SE 0.027), og 95% KI for $\gamma$ er (4.151 , 4.259).
+
+* Estimatet for populationsmedianen for gæt er således 67.0, med tilhørende 95% KI (63.5 , 70.8). Bemærk at man _ikke_ kan lave den tilsvarende exp-transformation af SE.
+
+* Bemærk at estimat og KI er ganske forskellige fra de værdier vi fik da vi analysere de ikke-transformerede data. De nye tal er mere troværdige fordi normalfordelingsantagelsen rent faktisk er fornuftig efter transformation.
+
+* Den overordnede konklusion er dog den samme: Det sande antal punkter (86) ligger klart udenfor konfidensintervallet, 
+så folk gætter typisk for lavt. Forskellen mellem data og det sande antal punkter kan ikke blot skyldes tilfældigheder. 
+
+```{r}
+m1_trans <- lm(log(figur1) ~ 1, data=dat1)
+summary(m1_trans)
+confint(m1_trans)
+
+exp(4.20492)
+exp(4.150601)
+exp(4.25924)
+```
+
+
+### Figur 2 og figur 3
+
+* Mon det blot var et tilfælde at fordelingen af gættene på antal punkter i figur 1 var skæv? Vi tegner QQ-plots for gættene på figur 2 og 3, både med og uden log-transformation.
+
+* Vi ser at der for begge figurer --- og dermed altså for samtlige tre figurer --- gælder at QQ-plots er pænere efter log-transformation end før. Man bør altså også køre analyser af figur 2 og 3 på log-transformerede data. 
+
+* Kør selv analyserne!
+
+```{r, fig.height=8, fig.width=8}
+par(mfrow=c(2,2))
+
+### Figur 2
+qqnorm(dat1$figur2, main="Figur 2, foer log-transformation")
+abline(mean(dat1$figur2), sd(dat1$figur2), col="red")
+qqnorm(log(dat1$figur2), main="Figur 2, efter log-transformation")
+abline(mean(log(dat1$figur2)), sd(log(dat1$figur2)), col="red")
+
+### Figur 3
+qqnorm(dat1$figur3, main="Figur 3, foer log-transformation")
+abline(mean(dat1$figur3), sd(dat1$figur3), col="red")
+qqnorm(log(dat1$figur3), main="Figur 3, efter log-transformation")
+abline(mean(log(dat1$figur3)), sd(log(dat1$figur3)), col="red")
+```
+
+
+### Vedr. uafhængighed
+
+* Udover antagelsen om normalfordeling, er der også antagelsen om at observationerne er uafhængige af hinanden. Løst sagt at der ikke er information i en observation om de øvrige, eller at hver observation bidrager med helt ny observation.
+
+* Uafhængighedsantagelsen er som regel umulig at kontrollere vha. data, så man må i stedet sikre sig at eksperimentet/dataindsamlingen er foregået således at uafhængighed er OK.
+
+* Man kan faktisk godt være lidt bekymret her. Jeg bad jeg udtrykkeligt de studerende om ikke at snakke med hinanden når de gættede, men måske hviskede nogle alligevel med sidemanden? Eller lurede på hvad han/hun tastede? I så fald er uafhængighedsantagelsen ikke helt OK.
+
+### Vedr. variationskoefficienter (opgave HS.11)
+
+I opgave HS.11 blev du bedt om at beregne diverse størrelser: gennemsnit $\bar y$, stikprøvespredning $s$, 
+_variarionskoefficienten_ $CV=\frac{s}{\bar y}$, og
+stikprøvespredningen for log(gæt). 
+
+Man kunne notere sig flere interessante ting:
+
+* Stikprøvespredningen vokser med gennemsnittet. I virkeligheden er det ikke så mærkeligt: Jo større værdier, jo mere "plads" er der til variation. Hvis værdier er meget små, er der ikke ret meget variation, hvis værdier er meget store er der meget variation.
+
+* Variationskoefficienten var næsten den samme for alle tre figurer, nemlig cirka 0.33. Spredningen er altså cirka 1/3 af middelværdien for alle tre figurer. Variationen er relativt set den samme! 
+
+* Variationskoefficienten var cirka det samme som spredningen for log(gæt). Man kunne tro at det er en generel regel, men det er ikke helt sandt: Det er sandt når spredningen for log(gæt) er cirka 1 eller derunder, men ellers ikke. 
+
+Vi vil næsten altid have en antagelse om at spredningen skal være ens for alle grupper af data i en model. Hvis værdierner er meget forskellige i det forskellige gruppper, og spredningen vokser med middelværdien, så vil det ofte være hensigtsmæssigt at log-transformere data. 
+
+### Vedr. korrelationer (opgave HS.11)
+
+Både de parvise punktplot og korrelationerne viser at der er kraftig korrelation mellem gættene på de tre figurer. 
+
+* Det er i virkeligheden ikke så mærkeligt, men viser at nogle personer har en generel tendens til at gætte ret højt; andre har en tendens til gætte ret lavt. 
+
+* For en given person er der altså information om persons gæt på en figur i den samme persons gæt på en anden figur. De enkelte gæt for den samme person er med andre ord ikke uafhængige. 
+
+```{r, fig.height=6, fig.width=6}
+plot(dat1)
+cor(dat1)
+```
+
+

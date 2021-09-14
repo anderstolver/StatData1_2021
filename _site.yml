@@ -16,6 +16,7 @@ navbar:
         - text: "13/9-2021"
           href: slides/sd1_forel210913_long.pdf
         - text: "15/9-2021"
+          href: slides/sd1_forel210915_long.pdf
     - text: "R"
       href: R.html
     - text: "Data"
