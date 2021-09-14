@@ -20,19 +20,19 @@ I dette dokument diskuteres metoder til at estimere middelværdien i en populati
 
 Vi arbejder med 4 forskellige datasæt
 
-* Højdemålinger for kvinder på StatData1 i 2017: standardberegning med pænt normalfordelte målinger
+* **Højdemålinger for kvinder** på StatData1 i 2017: standardberegning med pænt normalfordelte målinger
 
-* Målinger af anstand mellem to punkter indsamlet på baggrund af studerende på StatData1 i 2021 (formål var at *ramme* en afstand på 8 cm).Typisk transporttid fra bopæl til Frederiksberg Campus for studerende på StatData1 i 2020: beregninging af konfidensinterval, hvor der trækkes på den centrale grænseværdisætning
+* Målinger af **afstand mellem to punkter** indsamlet på baggrund af studerende på StatData1 i 2021 (formål var at *ramme* en afstand på 8 cm).Typisk transporttid fra bopæl til Frederiksberg Campus for studerende på StatData1 i 2020: beregninging af konfidensinterval, hvor der trækkes på den centrale grænseværdisætning
 
-* Typisk transporttid fra bopæl til Frederiksberg Campus for studerende på StatData1 i 2020: beregninging af konfidensinterval, hvor der trækkes på den centrale grænseværdisætning
+* Typisk **transporttid fra bopæl til Frederiksberg Campus** for studerende på StatData1 i 2020: beregninging af konfidensinterval, hvor der trækkes på den centrale grænseværdisætning
 
-* Gæt antal punkter på en figuren (Eksperiment med studerende på StatData1 i 2017): brug af normalfordeling på logaritme-transformerede data
+* **Gæt antal punkter på en figuren** (Eksperiment med studerende på StatData1 i 2017): brug af normalfordeling på logaritme-transformerede data
 
 Vi når ikke igennem alle detaljer ved dagens forelæsning, men det bør også være muligt at få rigtig meget ud af, at læse de resterende ting igennem selv derhjemme. 
 
 De første to eksempler repræsenterer nogle pæne/lette situationer. De to sidste eksempler går i dybden med nogle lidt mere udfordrende (men vigtige) ting.
 
-Vær opmærksom på, at dele af programmet også vil blive diskuteret i den video, der opsummerer undervisningen i kursusuge 2 (uploades onsdag eftermiddag). Til analysen af det sidste eksempel (gæt antal punkter) benyttes R koden fra Helle Sørensen (tidl. underviser) stort set uden uændringer.
+Vær opmærksom på, at dele af programmet også vil blive diskuteret i den video, der opsummerer undervisningen i kursusuge 2 (uploades onsdag eftermiddag). Til analysen af det sidste eksempel (gæt antal punkter) benyttes R koden fra Helle Sørensen (tidl. underviser) stort set uden ændringer.
 
 
 ***
@@ -121,7 +121,7 @@ names(my_data) <- c("farve", "afstand")
 
 ### Konfidensinterval for gennemsnitlig afstand i populationen af alle studerende på StatData1
 
-* Data: stikprøve $y_1, \ldots, y_20$ af målinger af afstande (kvantitativ, kontinuert)
+* Data: stikprøve $y_1, \ldots, y_{20}$ af målinger af afstande (kvantitativ, kontinuert)
 
 * Statistisk model: vi antager at stikprøve er uafhængige observationer fra en normalfordeling
     - $\mu$: betegner den ukendte middelværdi i hele populationen
@@ -142,9 +142,9 @@ sd(my_data$afstand)/sqrt(20) # estimat for spredning på gennemsnit
 ```
 
 * Konfidensinterval: Hertil har vi brug for
-        - gennemsnit og spredning for stikprøven (udregnet ovenfor)
-        - antallet af frihedsgrader: her `df = N - 1` hvor N er stikprøvens størrelse (her: N = 20)
-        - 97.5 % - fraktilen i en t-fordeling med `df` frihedsgrader
+    - gennemsnit og spredning for stikprøven (udregnet ovenfor)
+    - antallet af frihedsgrader: her `df = N - 1` hvor N er stikprøvens størrelse (her: N = 20)
+    - 97.5 % - fraktilen i en t-fordeling med `df` frihedsgrader
 
 Beregning af t-fraktil
 

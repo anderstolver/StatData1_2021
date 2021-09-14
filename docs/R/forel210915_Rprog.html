@@ -221,14 +221,14 @@ pre code {
 <p>I dette dokument diskuteres metoder til at estimere middelværdien i en population på baggrund af en (lille) stikprøve fra populationen. Desuden illustres forskellige andre pointer fra lærebogens kapitel 4 og kapitel 5.3.</p>
 <p>Vi arbejder med 4 forskellige datasæt</p>
 <ul>
-<li><p>Højdemålinger for kvinder på StatData1 i 2017: standardberegning med pænt normalfordelte målinger</p></li>
-<li><p>Målinger af anstand mellem to punkter indsamlet på baggrund af studerende på StatData1 i 2021 (formål var at <em>ramme</em> en afstand på 8 cm).Typisk transporttid fra bopæl til Frederiksberg Campus for studerende på StatData1 i 2020: beregninging af konfidensinterval, hvor der trækkes på den centrale grænseværdisætning</p></li>
-<li><p>Typisk transporttid fra bopæl til Frederiksberg Campus for studerende på StatData1 i 2020: beregninging af konfidensinterval, hvor der trækkes på den centrale grænseværdisætning</p></li>
-<li><p>Gæt antal punkter på en figuren (Eksperiment med studerende på StatData1 i 2017): brug af normalfordeling på logaritme-transformerede data</p></li>
+<li><p><strong>Højdemålinger for kvinder</strong> på StatData1 i 2017: standardberegning med pænt normalfordelte målinger</p></li>
+<li><p>Målinger af <strong>afstand mellem to punkter</strong> indsamlet på baggrund af studerende på StatData1 i 2021 (formål var at <em>ramme</em> en afstand på 8 cm).Typisk transporttid fra bopæl til Frederiksberg Campus for studerende på StatData1 i 2020: beregninging af konfidensinterval, hvor der trækkes på den centrale grænseværdisætning</p></li>
+<li><p>Typisk <strong>transporttid fra bopæl til Frederiksberg Campus</strong> for studerende på StatData1 i 2020: beregninging af konfidensinterval, hvor der trækkes på den centrale grænseværdisætning</p></li>
+<li><p><strong>Gæt antal punkter på en figuren</strong> (Eksperiment med studerende på StatData1 i 2017): brug af normalfordeling på logaritme-transformerede data</p></li>
 </ul>
 <p>Vi når ikke igennem alle detaljer ved dagens forelæsning, men det bør også være muligt at få rigtig meget ud af, at læse de resterende ting igennem selv derhjemme.</p>
 <p>De første to eksempler repræsenterer nogle pæne/lette situationer. De to sidste eksempler går i dybden med nogle lidt mere udfordrende (men vigtige) ting.</p>
-<p>Vær opmærksom på, at dele af programmet også vil blive diskuteret i den video, der opsummerer undervisningen i kursusuge 2 (uploades onsdag eftermiddag). Til analysen af det sidste eksempel (gæt antal punkter) benyttes R koden fra Helle Sørensen (tidl. underviser) stort set uden uændringer.</p>
+<p>Vær opmærksom på, at dele af programmet også vil blive diskuteret i den video, der opsummerer undervisningen i kursusuge 2 (uploades onsdag eftermiddag). Til analysen af det sidste eksempel (gæt antal punkter) benyttes R koden fra Helle Sørensen (tidl. underviser) stort set uden ændringer.</p>
 <hr />
 <div id="højdemålinger-for-kvinder-på-statdata1-i-2017" class="section level2">
 <h2>Højdemålinger for kvinder på StatData1 i 2017</h2>
@@ -326,7 +326,7 @@ head(my_data)</code></pre>
 <div id="konfidensinterval-for-gennemsnitlig-afstand-i-populationen-af-alle-studerende-på-statdata1" class="section level3">
 <h3>Konfidensinterval for gennemsnitlig afstand i populationen af alle studerende på StatData1</h3>
 <ul>
-<li><p>Data: stikprøve <span class="math inline">\(y_1, \ldots, y_20\)</span> af målinger af afstande (kvantitativ, kontinuert)</p></li>
+<li><p>Data: stikprøve <span class="math inline">\(y_1, \ldots, y_{20}\)</span> af målinger af afstande (kvantitativ, kontinuert)</p></li>
 <li><p>Statistisk model: vi antager at stikprøve er uafhængige observationer fra en normalfordeling</p>
 <ul>
 <li><span class="math inline">\(\mu\)</span>: betegner den ukendte middelværdi i hele populationen</li>
@@ -345,7 +345,12 @@ head(my_data)</code></pre>
 <pre class="r"><code>sd(my_data$afstand)/sqrt(20) # estimat for spredning på gennemsnit</code></pre>
 <pre><code>## [1] 0.469888</code></pre>
 <ul>
-<li>Konfidensinterval: Hertil har vi brug for - gennemsnit og spredning for stikprøven (udregnet ovenfor) - antallet af frihedsgrader: her <code>df = N - 1</code> hvor N er stikprøvens størrelse (her: N = 20) - 97.5 % - fraktilen i en t-fordeling med <code>df</code> frihedsgrader</li>
+<li>Konfidensinterval: Hertil har vi brug for
+<ul>
+<li>gennemsnit og spredning for stikprøven (udregnet ovenfor)</li>
+<li>antallet af frihedsgrader: her <code>df = N - 1</code> hvor N er stikprøvens størrelse (her: N = 20)</li>
+<li>97.5 % - fraktilen i en t-fordeling med <code>df</code> frihedsgrader</li>
+</ul></li>
 </ul>
 <p>Beregning af t-fraktil</p>
 <pre class="r"><code>### t-fraktil
