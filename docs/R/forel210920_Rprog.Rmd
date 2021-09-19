@@ -1,0 +1,192 @@
+---
+title: 'StatData1: forel210920'
+author: "Anders Tolver"
+output:   
+  html_document:
+    theme: sandstone
+    toc: true
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+
+***
+
+# Ensidet variansanalyse
+
+Her vises hvordan man kan estimere parametrene (dvs. finde *punktestimater*) i en ensidet variansanalysemodel (ANOVA). Vi regner på datasættet `antibio` der bl.a. blev diskuteret på slides og R program til forelæsningen d. 8/9-2021 (-se også s. 53 og 114 i lærebogen).
+
+Det er vigtigt at hæfte sig ved at
+
+* en ensidet ANOVA kan skrives på flere måder, nemlig med/uden referencegruppe, og man kan skifte referencegruppen
+
+* R-afsnittet i kapitel 5 også gennemgår dette eksempel
+
+## Indlæsning og visualisering af data
+
+```{r}
+library(isdals)
+data(antibio)
+head(antibio)
+```
+
+```{r}
+boxplot(org ~ type, data = antibio)
+```
+
+Ved ensidet ANOVA interesserer man sig primært for den gennemsnitlige (dvs. forventede) værdi af en måling fra hver gruppe.
+
+
+Vi minder om følgende *smarte* metode til at foretage udregninger af stikprøvestørrelser for en kvantitativ, kontinuert måling, når man samtidig ønsker at foretage udregninger opdelt på forskellige grupper givet ved en kategorisk variabel.
+
+Udregning af gennemsnit og spredning for hver gruppe
+
+
+```{r}
+summarise(group_by(antibio, type), mean_org = mean(org), sd_org = sd(org))
+```
+
+## Ensidet variansanalysemodel
+
+Ved en ensidet variansanalysemodel antager vi at målingerne i hver gruppe er normalfordelte med samme varians, men at middelværdien kan være forskellig i de forskellige grupper. Alle målinger antages at være uafhængige.
+
+Vi ønsker primært at udtale os om (populations-)middelværdierne i de forskellige grupper på baggrund af de givne data.
+
+Vi fokuserer her på, at der er forskellige måder man kan vælge at beskrive (eller parametrisere) middelværdierne i de seks grupper.
+
+### Parametrisering ved de seks gruppegennemsnit
+
+* Følgende R kode estimerer direkte de seks gruppegennemsnit.
+```{r}
+### Model, parametrisering med de seks gennemsnit
+model1 <- lm(org ~ type - 1, data=antibio)
+summary(model1)
+confint(model1)
+```
+
+### Model med Alfacyp som referencegruppe
+
+* Hvis man ikke skriver `-1`, så bruger R en af grupperne som referencegruppe, nemlig den der kommer først i alfabetet.
+
+* Referencegruppen nævnes ikke eksplicit i outputtet, men står som `Intercept`. Alle andre estimater er givet som forskelle til referencegruppen.
+
+```{r}
+### Model med Alfacyp som referencegruppe
+model2 <- lm(org ~ type, data=antibio)
+summary(model2)
+confint(model2)
+```
+
+### Skift af referencegruppe
+
+* Det er mere naturligt at bruge kontrolgruppen som reference. Dette kan opnås ved at bruge relevel.
+
+```{r}
+### Model med Control som referencegruppe
+antibio$myType <- relevel(antibio$type, ref="Control")
+# antibio$type
+# antibio$myType
+model3 <- lm(org ~ myType, data=antibio)
+summary(model3)
+confint(model3)
+```
+
+Hvis man helt sikker på, at man altid vil ønske at benytte `Control`-gruppen som reference, så er der ingen grund til at lave en ny variabel `myType` i datasættet. Koden ovenfor kan da blot erstattes med
+
+```{r eval = F}
+antibio$type <- relevel(antibio$type, ref="Control")
+model3 <- lm(org ~ type, data=antibio)
+```
+
+### Bemærkninger og resultater til de 3 viste metoder
+
+Bæmærkninger
+
+* De tre modelfits er tre forskellige versioner af *samme model*.
+
+* Bemærk fx at residual spredningen estimeres til det samme for alle tre versioner (Residual standard error: 0.1217), og at antallet af frihedsgrader er det samme (28 = 34-6)
+
+* I *Coefficients* tabellen hører alle tal i en linje altid til samme parameter i modellen. Fx: I model2 er første parameter middelværdien i kontrolgruppen, og både estimat og SE hører derfor til denne parameter. Parametren hørende til linje to er derimod *forskellen* mellem `Alfacyp` og `Control`, og både estimat og SE hører til denne parameter. Output fra *confint* hører til de samme parametre, og i samme rækkefølge.
+
+Eksempler på fortolkning af resultater
+
+* For alle typer antibiotika estimeres den forventede værdi af tilbageværende organisk materiale *højere* end for kontrolgruppen, og for alle typer pånær `Enroflox` indeholder de tilhørende konfidensintervaller indeholder ikke 0. Fx estimeres middelværdien 0.230 (SE 0.070, 95% KI (0.086, 0.274)) højere for `Fenbenda` end for kontrol.
+
+* Det tyder derfor på at brug af antibiotika hæmmer nedbrydningen af organisk materiale.
+
+
+***
+
+# Lineær regression
+
+Vi vender tilbage til datasættet med sammenhørende målinger af kropsvægt og hjertevægt for katte. 
+
+```{r message = F}
+library(MASS)
+data(cats)
+head(cats)
+```
+
+## Lineær regressionsmodel, scatterplot af data og regressionslinje
+
+Ved en lineær regressionanalyse ønsker vi at bestemme en ret linje med ligningen 
+ 
+> y = a + b * x
+
+som passer bedst muligt med de observerede datapunkter. Her tænker vi på
+
+* `y = Hwt` (heart weight) som responsen
+* `x = Bwt` (body weight) som den forklarende variabel
+
+Når vi laver lineær regression tænker vi på responsen (y) som trukket fra normalfordeling med middelværdi a + b * x. Hvis vi kender værdien af den forklarende variabel (x) så vil punktet på regressionslinjen (a + b * x) angive den forventede/gennemsnitlige værdi af responsen (y). Variationen omkring linjen vælger vi at beskrive ved (uafhængige) normalfordelte variable med middelværdi 0 og samme spredning.
+
+De (ukendte) parametre a og b der beskriver regressionslinjen estimeres ved mindste kvadraters metode fx. når man benytter `lm()`-funktionen i R som nedenfor.
+
+```{r}
+linreg <- lm(Hwt ~ Bwt, data=cats)
+summary(linreg)
+confint(linreg)
+```
+
+Vi aflæser umiddelbart følgende af R udskriften ovenfor
+
+* Skæringen a (der beskrive regressionslinjens værdi for x = 0) estimeres til -0.3567 (SE 0.6923). Tallet er i sig selv ret uinteressant, men estimatet er vigtigt for at kunne indtegne den estimerede regressionslinje.
+
+* Hældningen estimeres til 4.034 (SE 0.250). For to katte med en forskel i kropsvægt på 1 kg vil vi altså forvente en forskel i hjertevægt på 4.034 g. 95% konfidensintervallet for hældningen er (3.539, 4.529). Dette er altså de værdier af hældningen der stemmer overens med data.
+
+Figuren angiver et scatterplot for de parrede målinger af (x,y). Den estimerede regressionslinje er indtegnet på figuren.
+
+```{r}
+plot(Hwt ~ Bwt, data=cats, pch=1, xlab="Body weight (kg)", ylab="Heart weight (g)", main="Cats data")
+abline(linreg, col=2, lwd=3)
+```
+
+## Beregning af estimat og konfidensinterval for punkt på linjen
+
+Antag at vi er interesseret i estimat og KI for den forventede hjertevægt for en kat med kropsvægt på 2.5 kg.
+
+For at beregne estimatet kan vi blot indsætte værdien `x = 2.5`sammen med estimaterne for `a` og `b` i ligningen 
+
+> y = a + b * x.
+
+Hvis vi ønsker at beregne et konfidensinterval for dette punkt på linjen, så kan vi med fordel trække på `predict()`-funktionen i R.
+
+* Vi laver et nyt datasæt (`newData`) der kun indeholder kropsvægten 2.5.
+
+* Dernæst bruger vi funktionen `predict()` med den estimerede regressionsmodel (her: `linreg`) og det nye datasæt `newData`.
+
+```{r}
+### Nyt datasæt med een obsvation og kun med højdevariabel
+newData <- data.frame(Bwt=2.5)
+newData
+### Kun estimatet
+predict(linreg, newData)
+### Nu estimat og konfidensinterval
+predict(linreg, newData, interval="confidence", level = 0.95) 
+```
+
+* Den gennemsnitslige hjertevægt blandt katte på 2.5 kg estimeres til 9.72 g med 95% konfidensinterval (9.46, 9.99). Bemærk at dette interval udtaler sig om gennemsnittet (af hjertevægten) for katte med kropsvægt på 2.5 kg - ikke om værdien for en enkelt kat. Konfidensintervallet skal *ikke* fortolkes sådan, at det vil indeholde ca. 95 % af fremtidige målinger for katte med kropsvægt på 2.5 kg.
