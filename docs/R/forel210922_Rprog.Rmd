@@ -1,0 +1,244 @@
+---
+title: 'StatData1: forel210922'
+author: "Anders Tolver"
+output:   
+  html_document:
+    theme: sandstone
+    toc: true
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+Husk R-afsnittene i kapitel 5 og 6.
+
+# Analyse af to stikprøver: fokus på t-test
+
+I dette afsnit gives eksempler på metoder til at analysere to stikprøver. Bemærk at vi skelner imellem de to situationer
+
+* to uafhængige (uparrede) stikprøver
+* to parrede stikprøver
+
+Der gives tre eksempler nedenfor. De første to eksempler kan læses selv, mens det tredje eksempel (Eksempel 6.1: Hormonkoncentration) lægger sig mere op ad slides til forelæsningen d. 22/9-2021.
+
+## To uafhængige (uparrede) stikprøver
+
+#### Eksempel vedr. laks
+
+* Eksempel vedr. parasitter i laks (side 51, 127, 130 i lærebogen): Data fra to laksepopulationer (Atran i Sverige, Conon i Skotland). For hver population er der taget en stikprøve på 13 laks. Alle 26 fisk blev inficeret med en parasit, og efter fire uger blev fiskene skåret op og antallet af parasitter talt. Vi er interesseret i _forskellen_ mellem de to populationer. 
+
+* Hvis antager at spredningerne i de to populationer er ens, er situationen med to stikprøver identisk med en ensidet ANOVA med to grupper ($k=2$), og man kan enten bruge `lm` eller `t.test` med `var.equal = TRUE`. Hvis spredningerne i de to stikprøver må antages at være forskellige, kan vi ikke bruge `lm` men stadig `t.test` - nu med `var.equal = FALSE` som er default.
+
+#### Data
+
+* Datasættet er gemt som **salmon** i _isdals_-pakken. Vi laver desuden to datasæt, et for hver population. Dette er ikke strengt nødvendigt, men passer bedre med hvordan `t.test` bliver brugt i bogen.
+
+* Data er illustreret med boxplottet. Fra boxplottet at dømme er graden af variation nogenlunde ens for de stikprøver. Dette bekræftes af de to stikprøvespredninger der er af samme størrelsesorden (7.28 og 5.81). I denne situation virker det derfor fornuftigt at antage ens spredninger, men vi viser begge analyser.
+
+```{r, fig.width=4, fig.height=4}
+library(isdals)
+data(salmon)
+head(salmon)
+boxplot(parasites~stock, data=salmon)
+atranData <- subset(salmon, stock=="atran")
+cononData <- subset(salmon, stock=="conon")
+sd(atranData$parasites)
+sd(cononData$parasites)
+```
+
+
+#### Analyse under antagelse om ens spredninger
+
+* Hvis vi antager at spredningerne er ens, er situationen identisk med en ensidet ANOVA med to grupper og vi kan bruge `lm`. Eftersom vi først og fremmest er interesseret i _forskellen_ mellem de to grupper (laksepopulationer), bruger vi versionen med en referencegruppe, som i dette tilfælde bliver *atran* da A kommer før C i alfabetet.
+
+* En anden mulighed er at bruge `t.test`. Den har vi tidligere brugt til en enkelt stikprøve, men hvis vi angiver to variable, laver den sammenligning af to stikprøver. Default for `t.test` er (uparret) analyse af to stikprøver med _forskellige_ spredninger, så vi skal eksplicit angive det hvis vi ønsker ens spredninger.
+
+* Resultaterne er fuldstændigt identiske - bortset fra fortegnet hvilket svarer til om forskellen beregnes som _atran minus conon_ eller _conon minus atran_.
+
+```{r}
+### Analyse med lm
+model <- lm(parasites~stock, data=salmon)
+summary(model)
+confint(model)
+
+### Analyse med t.test
+t.test(atranData$parasites, cononData$parasites, var.equal=TRUE)
+```
+
+
+#### Analyse uden antagelse om ens spredninger
+
+* Hvis vi ikke kan antage at spredningerne er ens, skal vi udføre det såkaldte Welch test. 
+
+* Dette kan kun laves med `t.test`. Eftersom default er forskellige spredninger, behøver vi ikke angive det eksplicit i koden. 
+
+* Da stikprøvespredningerne er næsten ens for atran og conon (se ovenfor), er der stort set ikke forskel på resultaterne med og uden antagelsen om ens spredninger, men det er ikke altid tilfældet. 
+
+```{r}
+### Welch test
+t.test(atranData$parasites, cononData$parasites)
+```
+
+#### Resultater
+
+* Forskellen i antal parasitter mellem Atranpopulartionen og Cononpopulationen estimeres til 10.69 (SE 2.58), med flest parasitter i laks fra Atran. 95% konfidensintervallet for forskellen er (5.36 , 16.03). SE og KI er her beregnet udfra en antagelse om at spredningen er den samme i de to populationer. Ellers bliver 95% konfidensintervallet (5.34 , 16.04).
+
+* Nul er ikke inkluderet i konfidensintervallerne, så en populationsforskel på 0 er ikke i overensstemmelse med data på 95% konfidensniveau. Det tyder således på at laks fra Atran og Conon reagerer forskelligt på infektion med en parasit af denne type.
+
+## To parrede stikprøver
+
+#### Eksempel vedr. halthed af heste
+
+* Eksempel vedr. halthed af heste (side 59 i lærebogen): En symmetriscore er blevet målt to gange for hver af otte heste. Ved den ene måling var hestene raske, ved den anden måling var hestene blevet gjort kunstigt halte ved hjælp af en speciel hestesko hvor en skrue går lidt op i hoven. Bemærk at symmetriscoren er designet således, at jo mere symmetrisk hesten bevæger sig, jo lavere er scoren. Det ville måske være mere naturligt at kalde scoren en _asymmetriscore_.
+
+* Man er interesseret i om symmetriscoren kan bruges til at påvise halthed. Hvis der _ingen_ sammenhæng er med halthed, vil populationsmiddelværdien være den samme uanset om hestene er raske eller halte. Hvis der derimod _er_ en sammenhæng, vil populationsmiddelværdien afhænge af om hestene er raske eller halte. 
+
+* Vi vil således gerne estimere _forskellen_ i populationsmiddelværdi for raske og halte heste. 
+
+* Data er _parrede_ fordi der er to observationer fra de samme heste. De kan ikke antages at være uafhængige. Man baserer i stedet analysen på _forskellene_ for hver hest. 
+
+#### Data
+
+* Data ligger som **lameness** i _isdals_-pakken.
+
+```{r}
+data(lameness)
+lameness
+```
+
+#### Analyse
+
+* Analysen foretages på _forskellen_ mellem de to målinger. Det kan enten gøres ved at bruge forskellem som et enkelt argument til `t.test`, eller ved at bruge begge variable som input til `t.test` sammen med en angivelse af at observationerne er parrede. Resultaterne er helt identiske. Man kan også bruge `lm`
+ på forskellen
+```{r}
+t.test(lameness$lame - lameness$healthy)
+t.test(lameness$lame, lameness$healthy, paired=TRUE)
+summary(lm(lame - healthy ~ 1, data=lameness))
+```
+
+#### Resultater
+
+* Populationsforskellen i (a)symmetriscoren estimeres til 5.47, med tilhørende 95% KI (3.50 , 7.44). SE hørende til estimatet kan fx beregnes vha lm.
+
+* Nul ligger i ikke konfidensintervallet, så denne værdi af populationsforskel er ikke i overensstemmelse med data. Det tyder således på at symmetriscoren faktisk ændrer sig når heste bliver halte.
+
+## Eksempel 6.1: Hormonkoncentration
+
+Illustration af t-test for en enkelt stikprøve eller to parrede stikprøver.
+
+* Data ligger i datasættet hormone. Dette datasæt har målinger for to fodertyper (1 og 3) hvoraf vi kun bruger den ene. Vi laver derfor først et datasæt der kun indeholder disse værdier. Vi laver derefter en ny variabel med differenserne
+
+* Hypotesen er at middelværdien for forskellen er nul, altså $H_0:\mu=0$. 
+
+* t-testet kan udføres manuelt, med `t.test` eller `lm`. Resultaterne er helt identiske.
+
+* Hypotesen forkastes (p=0.027). Der er evidens for at foderet påvirker hormonkoncentrationen.
+
+Vi gør først data tilgængelige og laver den nye variabel:
+```{r}
+library(isdals)
+data(hormone)
+hormData <- subset(hormone, feed=="1")
+hormData <- transform(hormData, dif = final-initial)
+hormData
+```
+
+Her udføres testet "manuelt":
+```{r}
+mean(hormData$dif)
+sd(hormData$dif)
+### beregning af t-test
+13.77778 / 15.23793 * sqrt(9)
+### beregning af p-vaerdi
+2*(1 - pt(2.71253, df=8))
+```
+
+Her udføres testet vha. `lm`:
+```{r}
+model <- lm(dif ~ 1, data=hormData)
+summary(model)
+```
+
+Og endelig kan testet udføres med `t.test`:
+```{r}
+t.test(hormData$dif)
+```
+
+# Anvendelse af t-test i andre situationer
+
+Hvis den interessante hypotese kan formuleres som en enkelt restriktion på parametrene, som hører til den bagvedliggende population, så kan man ofte teste hypotesen ved et t-test. 
+
+Vi giver to konkrete eksempler
+
+* t-test vedrørende hældningen i en lineær regressionsmodel
+* t-test vedrørende forskellen mellem middelværdierne i to grupper i forbindelse med ensidet variansanalyse (ANOVA)
+
+## t-test i lineær regression
+
+Vi diskuterer eksemplet med målinger af kropsvægt og hjertevægt for katte.
+
+* Vi analyserer sammenhængen mellem kropsvægt og hjertevægt ved lineær regression.
+
+* Hypotesen om at der ikke er sammenhæng mellem kropsvægt og hjertevægt, $H_0:\beta=0$, testes med et t-test.
+
+Vi får en p-værdi som er under $2\cdot 10^{-16}$ (hvilket i praksis er 0!), så hypotesen forkastes. Der er stærk evidens for at der _er_ en sammenhæng, hvilket næppe er særligt overraskende.
+
+* Desuden testes hypotesen $H_0:\beta=4$ Denne hypotese kan ikke afvises (p=0.0.89). Data er altså ikke i modstrid med hypotesen om at "en øget kropsvægt på et kg svarer til en (forventet) øget hjertevægt på 4 g"
+
+
+```{r message = F}
+library(MASS)
+data(cats)
+
+# Lineær regression 
+summary(lm(Hwt ~ Bwt, data = cats))
+
+# Test af hypotesen H: beta=4
+(4.0341 - 4) / 0.2503
+
+# Beregning af p-vaerdi
+2*(1-pt(0.1362365, df = 144 - 2))
+
+```
+
+
+## t-test for parvise sammenligninger i ensidet ANOVA
+
+#### Eksempel med antibio-data, sammenligning med kontrolgruppen
+
+* t-test for sammenligning med referencegruppen foretages automatisk i summary
+
+* Hvis vi fitter modellen med kontrolgruppen som reference, udføres testene for sammenligning med kontrollen altså for hver af de fem typer antibiotium.
+
+* Lad os som eksempel se på Fenbendazole og undersøge hypotesen om at den forventede værdi er den samme for denne gruppe og kontrolgruppen, $\alpha_{Fenb} = \alpha_{Ctrl}$. Vi aflæser p-værdien til 0.0028, så der er evidens i data for at der er forskel mellem de to grupper. 
+
+* Faktisk er den forventede værdi signifikant lavere for kontrolgruppen end for fire af de fem andre grupper.
+Enroflox er den eneste undtagelse (p=0.14).
+
+
+
+
+```{r}
+library(isdals)
+data(antibio)
+
+antibio$myType <- relevel(antibio$type, ref="Control")
+model3 <- lm(org ~ myType, data=antibio)
+summary(model3)
+```
+
+Hvis vi kender/aflæser estimat og standard error vedrørende forskellen $\alpha_{Fenb} - \alpha_{Ctrl}$ fra R-outputtet ovenfor, så kan t-teststørrelsen og p-værdien beregnes med følgende R kode. Du kan aflæse under `Residual standard error`, hvor mange frihedsgrader der skal benyttes ved omregning fra t-teststørrelse til p-værdi (men jeg udregner her værdien som antal observationer n = 34 minus antal grupper k = 6). Når man omregner t-testsstørrelse til p-værdi med R-koden nedenfor, så er det vigtig at man indsætter *den numeriske værdi* af t-teststørrelsen. Det er derfor jeg skriver `abs(my_T_test)` for at få den *absolutte* værdi uden eventuelt fortegn. 
+
+```{r}
+# T-teststørrelse
+my_T_test <- (0.23000 - 0)/0.07029
+my_T_test
+
+# p-vaerdi
+my_p_value <- 2 * (1 - pt(abs(my_T_test), df = 34 - 6))
+my_p_value
+```
+
