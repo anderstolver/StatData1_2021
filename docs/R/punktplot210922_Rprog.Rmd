@@ -1,0 +1,233 @@
+---
+title: 'StatData1: uge 3, onsdag eftermiddag (22/9-2021)'
+author: "Anders Tolver"
+output:   
+  html_document:
+    theme: sandstone
+    toc: true
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+Dette dokument indeholder både *helt eller delvist gennemgået materiale* fra R-programmet til 15/9-2021 og noget nyt (som ikke var med i det oprindelige program til onsdag i kursusuge 2).
+
+# Gæt på antallet af punkter
+
+## Beskrivelse af data og problemstilling
+
+På Statistisk Dataanalyse 1 i 2017 viste Helle Sørensen de studerende tre punktplot og bad dem gætte på antallet af punkter i hver figur. De fik cirka 5 sekunder til at se på hver figur inden de skulle gætte. 
+
+* Figurerne er vist i opgave HS.11, og det sande antal punkter er 86, 142 og 47.
+
+* De studerendes gæt er tilgængelige i filerne punktplot2017.xlsx og punktplot2017.txt. Der er gæt fra 143 studerende. 
+
+Vi er interesserede i om _man/folk_ i gennemsnit gætter korrekt på antal punkter i et punktplot, eller om man/folk i gennemsnit gætter for lavt eller højt. Mere præcist:
+
+* Vi ser på gættene på en figur ad gangen - lad os bruge figur 1 som eksempel.
+
+* Vi tænker på en generel population (uden at specificere præcis hvilken, men det kunne måske være unge danskere mellem 20 og 25 år), og tænker på de 143 gæt som en enkelt stikprøve. 
+
+* Vi vil bruge stikprøven til at lave et estimat og et konfidensinterval for det typiske gæt (i populationen).
+Det intereessante er så om det sande antal punkter - 86 for figur 1 - ligger i konfidensintervallet eller ej. 
+
+### Indlæsning af tekstfilen punktplot2017.txt
+
+1. Skift _Working directory_ til den mappe hvor du har lagt datafilen. Du gør det nemmest via _Session_ menuen, vælg _Set Working Directory_ og _Choose Directory_. På min computer bliver det nedenstående `setwd`-kommando.
+
+2. Brug `read.table` kommandoen nedenfor. Optionen `header=TRUE` angiver at den første linie skal bruges som variabelnavne. 
+
+```{r}
+setwd("../data")
+dat1 <- read.table('punktplot2017.txt', header=TRUE)
+```
+
+Datasættet dat1 skulle gerne optræde i _Environment_ vinduet (øverst til højre). Checker at datasættet ser ud som forventet, fx med følgende kommando og/eller plots:
+
+```{r}
+summary(dat1)
+```
+
+## Analyse af data fra Figure 1 (med 86 punkter)
+
+### Figur 1: Analyse FØR transformation
+
+Vi glemmer først opgave HS.11 et øjeblik... 
+
+* Vi antager at gættene på antal punkter i figur 1 er uafhængige og normalfordelte med middelværdi $\mu$ og spredning $\sigma$. Middelværdien er populationsgennemsnittet, altså det gennemsnitlige gæt hvis vi spurgte alle i hele populationen. Det behøver _ikke_ at være det samme som det faktiske antal punkter i figuren. Faktisk er det en interessant hypotese om det er tilfældet. Hvis populationsmiddelværdien _ikke_ er lig det sande antal punkter, betyder det at folk har en tendens til at over- eller underestimere antallet af punkter.
+
+* Estimat, SE og 95% konfidensinterval kan fx bestemmes vha. `lm` som vist nedenfor.
+
+* Estimatet er blot gennemsnittet på 70.69 (SE 1.97) med 95% konfidensinterval (66.8 , 74.6). Det er således populationsgennemsnit mellem 66.8 og 74.6 der er i overensstemmelse med data. Det sande antal punkter (86) ligger ikke i KI, og er altså _ikke_ i god overensstemmelse med data. _Hvis_ folk i gennemsnit gætter korrekt, så er det ikke sandsynligt at få data som dem vi har fået. Med andre ord: Data tyder på at man generelt set gætter for lavt. 
+
+```{r}
+m1 <- lm(figur1 ~ 1, data=dat1)
+summary(m1)
+confint(m1)
+```
+
+### Problem: målingerne er ikke vel beskrevet ved en normalfordeling
+
+Som udgangspunkt baserer udledningen af formlen for konfidensintervallet sig på nogle modelantagelser:
+
+* Observationerne bør forhåbentlig være nogenlunde uafhængige (se dog nedenfor)
+
+* Normalfordelingsantagelsen checkes med et QQ_plot (som i opgave HS.11):
+
+```{r, fig.height=4, fig.width=4}
+qqnorm(dat1$figur1)
+abline(mean(dat1$figur1), sd(dat1$figur1), col="red")
+```
+
+* Det set faktisk ikke helt godt ud! Prøv evt. selv at sammenligne med QQ-plot for simulerede normalfordelte data som i opgave 4.5, nu med n=143.
+
+* Histogrammet nedenfor viser hvad der er problemet: Fordelingen er skæv. Der er relativt mange der gætter temmelig højt, men ikke tilsvarende mange der gætter meget lavt. 
+
+```{r, fig.height=4, fig.width=4}
+hist(dat1$figur1)
+```
+
+**Vigtigt:** Som beskrevet detaljeret i eksemplet ovenfor med indtægter fra studiejob, så *kan den centrale grænseværdisætning ofte redde os* når vi blot interesserer os for at estimere gennemsnittet i et population: gennemsnit af mange målinger vil ofte være approksimativt normalfordelte, så det beregnede konfidensintervallet for gennemsnittet er sikkert fornuftigt nok.
+
+Dog kan man med rette diskutere, om middelværdien/gennemsnittet i populationen er et relevant mål for centrum i fordelingen, når fordelingen er så skæv som på histogrammet (se eventuelt diskussionen i lærebogens kapitel 1.4.4).
+
+Et standardtrick i denne situation er at log-transformere data.  Vi prøver derfor at lave QQ-plots og histogrammer for den log-transformerede variabel. Husk at log-funktionen i R er den naturlige logaritme.
+
+```{r, fig.height=4, fig.width=8}
+par(mfrow=c(1,2))
+qqnorm(log(dat1$figur1))
+abline(mean(log(dat1$figur1)), sd(log(dat1$figur1)), col="red")
+hist(log(dat1$figur1))
+```
+
+* Det ser meget bedre ud! "Miraklet" indtræffer fordi log-funktionen presser de høje værdier mere sammen end de små værdier. 
+
+* Vi arbejder derfor videre med de log-transformerede data.
+
+### Fortolkning af parametre ved log-transformation
+
+Vi vælger altså at analysere _den naturlige logarime til gættene_! Mere præcist:
+
+* Vi antager at _den naturlige logarime til gættene_ er uafhængige og normalfordelte. 
+
+* Lad os kalde middelværdien i fordelingen af log(antal) for $\gamma$ (gamma) for at kunne skelne den fra middelværdien af de ikke-transformerede gæt. 
+
+* Man skal holde tungen lige i munden mht. fortolkningen af middelværdiparameteren $\gamma$. Det er altså populationsmiddelværdien for logaritmen til antal gæt. Vi bruger også ordet _den forventede værdi_ (expected value) for log(gæt) og skriver
+$$
+  E \bigl( log(gæt) \bigr) = \gamma
+$$
+* Man kunne tro at $\gamma$ skulle fortolkes som logaritmen til middelværdien af gættet (før transformation), men det er _forkert_! I stedet kan man tænke i baner af medianer.
+
+* Medianen i en fordeling (populationsmedianen) er den værdi hvor halvdelen af sandsynligheden ligger til venstre for værdien, og den anden halvdel til højre. Normalfordelingen er symmetrisk om sin middelværdi, så derfor er median og middelværdi ens i normalfordelingen. 
+
+* Vi har altså at både median og middelværdi for log(gæt) er lig $\gamma$:
+$$
+    E \bigl( log(gæt) \bigr) = \text{Median} \bigl( log(gæt) \bigr) = \gamma
+$$
+Fordelingen for gæt (utransformeret) er derimod skæv, så her er median og middelværdi _ikke_ ens.
+
+* Jeg skrev ovenfor at middelværdien ikke "følger" med ved transformation. Det gør medianen derimod! Så hvis $\gamma$ er medianen for log(gæt), så er $e^\gamma$ median for gæt. Husk nemlig at log er den naturlige logaritme som "ophæves" af exp. Altså:
+$$
+     \text{Median} \bigl( gæt \bigr) = e^\gamma
+$$
+Fremgangsmåden er nu følgende: 
+
+* Man beregner estimat og konfidensinterval for $\gamma$ ved at regne på de log-transformerede data. Derefter transformerer man både estimat og endepunkterne i konfidensintervallet med exp. 
+
+* Resultaterne tolkes som estimat og konfidensinterval for _medianen_ i fordelingen af gættet. 
+
+### Figur 1: Analyse EFTER transformation
+
+* Vi kører `lm` på de transformerede data
+
+* Estimat for middelværdien/medianen for log(gæt) er 4.205 (SE 0.027), og 95% KI for $\gamma$ er (4.151 , 4.259).
+
+* Estimatet for populationsmedianen for gæt er således 67.0, med tilhørende 95% KI (63.5 , 70.8). Bemærk at man _ikke_ kan lave den tilsvarende exp-transformation af SE.
+
+* Bemærk at estimat og KI er ganske forskellige fra de værdier vi fik da vi analysere de ikke-transformerede data. De nye tal er mere troværdige fordi normalfordelingsantagelsen rent faktisk er fornuftig efter transformation.
+
+* Den overordnede konklusion er dog den samme: Det sande antal punkter (86) ligger klart udenfor konfidensintervallet, 
+så folk gætter typisk for lavt. Forskellen mellem data og det sande antal punkter kan ikke blot skyldes tilfældigheder. (**I næste afsnit vises hvordan man kan udføre et formelt t-test for hypotesen om, at de studerende i gennemsnit gætter korrekt!**)
+
+```{r}
+m1_trans <- lm(log(figur1) ~ 1, data=dat1)
+summary(m1_trans)
+confint(m1_trans)
+
+exp(4.20492)
+exp(4.150601)
+exp(4.25924)
+```
+
+## Gætter folk systematisk forkert?
+
+Ovenfor (for Figur 1) og i opgave HS.15 undersøgte vi ved hjælp af _konfidensintervaller_ om folk typisk gætter korrekt, for lav eller for højt. Nu skal vi i stedet lave hypotesetest for det samme.
+
+
+### Figure 1, 2, 3: Transformation af data
+
+Det viser sig, at når vi kigger på de studerende gæt på antallet af punkter på figurerne 2 og 3, så er der også problemer med normalfordelingsantagelsen.
+
+* Vi starter med at undersøge i det følgende at værdierne af log(gæt) er uafhængige og normalfordelte. Bemærk at vi analyserer en figur af gangen - ellers holder uafhængighedsantagelsen ikke da gættene stammer fra de samme personer.
+
+Efter transformation (med logaritmen) ser sammenligningen med normalfordelinge til gengæld ualmindeligt pæn ud. Dette er illustreret i QQ-plots nedenfor
+
+```{r, fig.height=4, fig.width=12}
+par(mfrow=c(1,3))
+qqnorm(log(dat1$figur1), main="Figur 1")
+abline(mean(log(dat1$figur1)), sd(log(dat1$figur1)), col="red")
+qqnorm(log(dat1$figur2), main="Figur 2")
+abline(mean(log(dat1$figur2)), sd(log(dat1$figur2)), col="red")
+qqnorm(log(dat1$figur3), main="Figur 3")
+abline(mean(log(dat1$figur3)), sd(log(dat1$figur3)), col="red")
+```
+
+### Formulering og test af relevante hypoteser
+
+* Vi vil først interessere os for om folk (populationen) systematisk gætter forkert.
+
+* Det korrekte antal punkter i figurerne er 
+$$
+   N_1 = 86, \quad N_2=142, \quad N_3=47
+$$
+
+* _Hvis_ de oprindelige data var normalfordelte ville den relevante hypotese for figur 1 derfor være $H_0:\mu=86$, men det dur ikke efter transformation. I stedet undersøger vi om _middelværdien af de log-transformerede data_ er lig log(86) som viser sig at være 4.454. 
+
+* I sidste uge brugte vi notationen $\gamma$ for middelværdien (populationsgennemsnittet) for log(gæt). 
+Modellen er altså at log(gæt) er normalfordelt med middelværdi $\gamma$ og spredning $\sigma$, og 
+den relevante hypotesen er $$
+H_0:\gamma=4.454.$$
+
+
+* Da normalfordelingen er symmetrisk, er $\gamma$ både middelværdi og median for log(gæt). Medianer - men ikke middelværdier - følger pænt med ved transformation, så _populationsmedianen_ for gæt er $\exp(\gamma)$. 
+
+* Hypotesen $H_0:\gamma=\log(86)$ er identisk med hypotesen $H_0:\exp(\gamma)=86$, så hypotesen er et udtryk for om _populationsmedianen_ for gættene er lig det faktiske antal  punkter i figuren. Men testet _skal_  foregå på log-skala fordi det er her normalfordelingsantagelsen er fornuftig!
+
+* Tilsvarende for figur 2 og figur 3 svarer den relevante hypotese til at undersøge om middelværdien af log(gæt) er hhv. log(142)=4.956 og log(47)=4.990.
+
+* For nemheds skyld bruger vi `t.test` til at udføre testene. 
+
+```{r}
+t.test(log(dat1$figur1), mu=log(86))
+t.test(log(dat1$figur2), mu=log(142))
+t.test(log(dat1$figur3), mu=log(47))
+```
+
+* Vi får p-værdierne 8.472e-16 (figur 1), < 2.2e-16 (figur 2) og 0.0003923 (figur 3). I alle tilfælde bliver hypotesen altså forkastet med et brag, så middelværdien for log-gæt er altså _ikke_ lig logaritmen til det sande antal punkter. Eller, ækvivalent: Median for gættene er altså ikke lig det sande antal punkter. 
+* Sammenligning af konfidensintervallerne med log(86)=4.454, log(142)=4.956 og log(47)=4.990 viser at folk _undervurderer_ antallet af punkter.
+* Dette er også illustreret ved nedenstående histogrammer over de ikke-transformerede data. De røde linier er indlagt ved det sande antal punkter.
+
+```{r, fig.height=4, fig.width=12}
+par(mfrow=c(1,3))
+hist(dat1$figur1, main="Figur 1")
+abline(v=86, col=2, lwd=2)
+
+hist(dat1$figur2, main="Figur 2")
+abline(v=142, col=2, lwd=2)
+
+hist(dat1$figur3, main="Figur 3")
+abline(v=47, col=2, lwd=2)
+```
