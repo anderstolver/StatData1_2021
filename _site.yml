@@ -21,6 +21,9 @@ navbar:
           href: slides/sd1_forel210920_long.pdf
         - text: "22/9-2021"
           href: slides/sd1_forel210922_long.pdf
+        - text: "27/9-2021"
+          href: slides/sd1_forel210927_long.pdf
+        - text: "29/9-2021"
     - text: "R"
       href: R.html
     - text: "Data"
