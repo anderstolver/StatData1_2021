@@ -1,0 +1,133 @@
+---
+title: 'StatData1: forel210927'
+author: "Anders Tolver"
+output:   
+  html_document:
+    theme: sandstone
+    toc: true
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+# F-test, hypoteser og Bonferroni-korrektion
+
+Dette eksempler illustrerer
+
+* brug af F-test til test af hypoteser i ensidet ANOVA
+* brug af Bonferroni-korrektion i forbindelse med multiple (t-test) i ensidet ANOVA
+
+## Indlæsning af data
+
+Vi regner på datasættet antibio der er blevet diskuteret ved flere forlæsninger og tidligere R-programmer (-se også s. 53 og 114 i lærebogen).
+
+```{r}
+library(isdals)
+data(antibio)
+head(antibio)
+```
+
+## Sammenligning af tre eller flere grupper
+
+Vi beskriver variationen i målingerne af organisk stof ved en ensidet variansanalysemodel. Vi antager således, at målingerne i hver gruppe er normalfordelte med samme varians, men at middelværdien kan være forskellig i de forskellige grupper. Alle målinger antages at være uafhængige.
+
+Vi kalder populationsmiddelværdierne i de 6 grupper (givet ved fodertype) for $\alpha_1,  \alpha_2,  \ldots , \alpha_6$. Vi ønsker at teste en hypotese om, at middelværdierne er ens i alle grupper
+
+$$H_0 : \alpha_1 = \alpha_2=  \ldots = \alpha_6$$
+
+Testet kan udføres ved at beregne en F-teststørrelse som beskrevet i lærebogens Ch. 6.3.1 (og på slides fra dagens forelæsning). Vi viser her tre forskelle metoder til at udtrække netop denne F-teststørrelse (og den tilhørende P-værdi) ved brug af R
+
+### F-test ud fra summary af model
+
+Hvis vi *fitter* en ensidet variansanalyse model, vil et `summary` af modellen vise en F-teststørrelsen
+
+```{r}
+model1 <- lm(org ~ type, data = antibio)
+summary(model1)
+```
+
+Vi konkluderer at F-teststørrelsen bliver 7.97 med en tilhørende p-værdi på $8.953e-05$.
+
+**Vigtigt:** Denne fremgangsmåde virker kun, hvis den ensidede variansanalysemodel er fittet med en parametrisering, hvor der er valgt en referencegruppe. Mao: du kan ikke bruge metoden, hvis du skriver `lm(org ~ type - 1, data = antibio)`.
+
+### F-test ved drop1
+
+Resultatet fra F-testet kan også udtrækkes ved brug af `drop1()` som vist her ...
+
+```{r}
+model1 <- lm(org ~ type, data = antibio)
+drop1(model1, test = "F")
+```
+
+**Vigtigt:** Denne fremgangsmåde virker kun, hvis den ensidede variansanalysemodel er fittet med en parametrisering, hvor der er valgt en referencegruppe. Mao: du kan ikke bruge metoden, hvis du skriver `lm(org ~ type - 1, data = antibio)`.
+
+### F-test: sammenligning af fuld model og nulmodel
+
+Som beskrevet på slides 13-15 fra dagens forelæsning (og i lærebogens Ch. 6.4), så kan man også opfatte F-testet som en sammenligning mellem det bedste fit af
+
+* en *fuld model*: hvor de 6 gruppemiddelværdier tillades at være forskellige
+* en *nulmodel*: hvor de 6 gruppemiddelværdier restringeres til at have samme værdi
+
+Den *fulde model* er her blot vores ensidet variansanalyse model, mens *nulmodel*len svarer til at vi opfatter målinger som en sample med samme middelværdi. I R kan de to modeller fittes og sammenlignes således ...
+
+```{r}
+fullModel <- lm(org ~ type, data = antibio)
+nullModel <- lm(org ~ 1, data = antibio)
+anova(nullModel, fullModel)
+```
+
+## Andre hypoteser: samme middelværdi for alle grupper pånær kontrolgruppen?
+
+Vi kunne i stedet være interesseret i at undersøge, om middelværdien er ens for alle grupper, bortset fra kontrolgruppen. Dette kan formuleres som
+
+$$
+   H_0: \alpha_{\text{Alfacyp}}=\alpha_{\text{Enroflox}} = 
+   \alpha_{\text{Fenbenda}} = \alpha_{\text{Ivermectin}} = \alpha_{\text{Spiramyc}}
+$$
+
+men der ikke er nogle restriktioner på middelværdien hørende til kontrolgruppen.
+
+Vi kan teste hypotesen som en F-test ud fra 
+
+* en *fuld model*: hvor de 6 gruppemiddelværdier tillades at være forskellige
+* en *nulmodel*: med kun to forskellige gruppemiddelværdier for hhv. kontrolgruppen og en (fælles) værdi for de øvrige 5 grupper
+
+Den *fulde model* er her blot vores ensidet variansanalyse model, mens *nul model*len kan fittes i R ved at lave en ny faktor med to niveauer, som holder styr på om målingerne stammer fra kontrolgruppe eller ej.
+
+Variablen `typeControl` som laves her neden for antager to værdier: `TRUE` for målinger fra kontrolgruppen og `FALSE` for alle øvrige målinger.
+
+```{r}
+antibio$typeControl <- (antibio$type == "Control")
+fullModel <- lm(org ~ type, data = antibio)
+nullModel2 <- lm(org ~ typeControl, data = antibio)
+anova(nullModel2, fullModel)
+```
+
+**Konklusion:** Nulhypotesen forkastes: F = 4.5056 svarende til en p-værdi på 0.006171. Datasættet understøtter dermed *ikke* en hypotese om, at middelværdien er ens for alle grupper pånær kontrolgruppen.
+
+## Bonferroni-korrektion: multiple t-test
+
+Vi betragter nu den ensidede variansanalysemodel for `antibio` datasættet, hvor vi vælger en parametrisering af gruppemiddelværdierne med kontrolgruppen (`Control`) som reference
+
+```{r}
+### Model med Control som referencegruppe
+antibio$myType <- relevel(antibio$type, ref="Control")
+model3 <- lm(org ~ myType, data=antibio)
+summary(model3)
+```
+
+De 6 linjer i tabellen angiver nu
+
+* estimatet for gruppemiddelværdien hørende til kontrolgruppen: 2.6033
+* estimatet for forskel i middelværdi mellem `Alfacyp` og kontrolgruppe: 0.29167
+* ...
+* estimatet for forskel i middelværdi mellem `Spiramyc` og kontrolgruppe: 0.25167
+
+De nederste 5 linjer i tabellen (under `Coefficients:`) angiver desuden `Std. Error` på estimat for forskellene til kontrolgruppen samt t-teststørrelse og p-værdier svarende til hypoteser om, at forskellene er lig med 0 (dvs. ingen forskel til kontrolgruppen).
+
+Hvis vi kigger på alle p-værdier for de 5 test, så vil risikoen for at mindst en p-værdi ved et tilfælde er under 5 % være langt over 5 % (selvom der for hele populationen i gennemsnit ikke skulle være nogle forskelle til kontrolgruppen). Der er mao. en sandsynlighed for at begå en fejl af type I (forkaste en sand nulhypotese), som er væsentlig større end 5 %.
+
+Ved **Bonferroni-korrektion** ganges p-værdierne med *antallet af test* (her 5) før man foretager en vurdering af, om p-værdien er under signifikansniveauet (fx. 5 %). For dette eksempel er der stadig 4 af de 5 nederste p-værdier som holder sig under 5 %, selvom vi betragter de Bonferroni-korrigerede p-værdier! Vi føler os derfor ret sikre på, at alle grupper/fodertyper (pånær `Enroflox`), fører til et forhøjet indhold af organisk materiale i gødningen.
