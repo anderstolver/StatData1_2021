@@ -1,0 +1,443 @@
+---
+title: 'StatData1: forel210929'
+author: "Anders Tolver"
+output:   
+  html_document:
+    theme: sandstone
+    toc: true
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+
+***
+
+
+Formålet med dette R program er at illustrere teori og metoder fra lærebogens Ch. 7 om modelkontrol (eng: *model validation*) og prædiktion (eng: *prediction*). R programmet lægger sig op ad forelæsningsslides fra 29/9-2021.
+
+Alle begreber diskuteres for to forskellige modeller
+
+* lineær regression: datasættet `cats` data fra `MASS` R-pakken
+* kvadratisk regression: datasættet `paperstr` fra `isdals` R-pakken (Example 8.3 fra lærebogen)
+* ensidet variansanalyse: datasættet `antibio` fra `isdals` R-pakken (Example 3.2 fra lærebogen)
+
+
+***
+
+# Sammenhæng mellem hjertevægt og kropsvægt for katte  (lineær regression)
+
+## Indlæsning af data og statistisk model
+
+Vi indlæser datasættet `cats` bestående af parvise målinger af kropsvægt og hjertevægt for 144 katte
+
+```{r message = F}
+library(MASS)
+data(cats)
+head(cats)
+```
+
+Vi beskriver variationen i målingerne af hjertevægt (`Hwt`) ved en lineær regressionsmodel, hvor kropsvægten (`Bwt`) benyttes som forklarede variabel. Modellen fittes med `lm()` funktionen i R
+
+```{r}
+linreg1 <- lm(Hwt ~ Bwt, data = cats)
+```
+
+## Modelkontrol
+
+Den grundlæggende antagelse er at målingerne af hjertevægt (`y = Hwt`) for en fast kropsvægt (`x = Bwt`) i gennemsnit ligger på en ret linje
+$$
+E(y) = \alpha + \beta \cdot x
+$$
+
+og at variation omkring regressionslinjen kan beskrives ud fra fejl-led (eng: *remainder terms*) $e_1, \ldots, e_n$ som
+
+* har middelværdi 0
+* har samme spredning
+* er normalfordelt
+* er uafhængige
+
+Vi kontrollerer modelantagelserne ved at se på de standardiserede residualer. Følgende figurer kan være relevante
+
+* et residualplot af de standardiserede residualer mod de fittede værdier
+* et residualplot af de standardiserede residualer mod den forklarende variabel x (dvs. `Bwt`)
+* et QQ-plot af de standardiserede residualer
+
+### Residualplot
+
+Nedenfor plottes de standardiserede residualer fra den lineære regressionsmodel imod
+
+* fittede værdier (venstre)
+* den forklarende variabel/kropsvægt (højre)
+
+**Bemærk:** I dette tilfælde er der ikke forskel på de to typer af residualplot, med for mere komplicerede regressionsmodeller (kvadratisk regression, multipel lineær regression) så kan der være stor forskel på figurerne.
+
+```{r fig.align = "center"}
+### Residualplot med vandret linie i 0
+par(mfrow = c(1, 2)) ### arrangerer de to figurer ved siden af hinanden
+plot(fitted(linreg1), rstandard(linreg1), pch = 16, xlab = "Predicted values", ylab = "Standardized residuals"
+     , main = "Cats data")
+abline(h = 0, lty = 2)
+plot(cats$Bwt, rstandard(linreg1), pch = 16, xlab = "Body weight (kg)", ylab = "Standardized residuals", main = "Cats data")
+abline(h = 0, lty = 2)
+par(mfrow = c(1, 1))
+```
+
+Vi konkluderer at
+
+* gennemsnittet af residualerne er ca. 0 uanset værdien af gruppegennemsnittet (*predicted values*)
+* der er ca. samme spredning af residualerne i alle grupper (*varianshomogenitet*)
+
+
+### QQ-plot
+
+```{r}
+### QQ-plot 0/1-linien
+qqnorm(rstandard(linreg1), pch = 16, main = "Cats Data")
+abline(0, 1, lwd = 2, col = "red")
+```
+
+På baggrund af QQ-plottet konkluderes at
+
+* punkterne afviger ikke systematisk fra den rette linje
+* dette fortolkes som at de standardiserede residualer med god tilnærmelse kan antages at følge en standardnormalfordeling (med middelværdi 0 og varians 1)
+
+### Konklusion
+
+Hverken residualplottet eller QQ-plottet giver anledning til at stille spørgsmålstegn ved antagelser om, at målingerne af hjertevægt kan beskrives ved en lineær regressionsmodel med kropsvægt som forklarende variabel.
+
+## Prædiktionsintervaller og konfidensintervaller
+
+Konfidensintervaller og prædiktionsintervaller konstrueret *i hånden* på slide 32-33 fra dagens forelæsning (29/9-2021) kan beregnes med R som vist her ...
+
+```{r}
+linreg1 <- lm(Hwt ~ Bwt, data = cats)
+newData <- data.frame(Bwt = 2.5)
+### praediktion og konfidensinterval 
+predict(linreg1, newData, interval = "c")
+### praediktion og praediktionsinterval
+predict(linreg1, newData, interval = "p")
+```
+
+***
+
+# Example 8.3: Tensile strength of Kraft paper (kvadratisk regression)
+
+## Indlæsning af data og statistiske modeller
+
+Datasættet fra lærebogens Example 8.3 består af parvise målinger af styrken af *Kraftpapir* (`strength`) og indholdet af `hardwood` i % (pct).
+
+```{r}
+library(isdals)
+data(paperstr)
+head(paperstr)
+```
+
+Vi laver et scatterplot af `strength` model indholdet af `hardwood`
+
+```{r}
+plot(paperstr$hardwood, paperstr$strength, pch = 16, xlab = "Hardwood (pct)", ylab = "Strength", main = "Example 8.3: Kraftpapir")
+```
+
+Vi ønsker at beskrive den gennemsnitlige styrke (`y = strength`) for fast/kendt værdi af indholdet af `x = hardwood` ved en passende matematisk sammenhæng. Vi ser på følgende to modeller
+
+* Lineær regression: $E(y)= \alpha + \beta \cdot x$
+* Kvadratisk regression: $E(y) = \alpha + \beta_1 \cdot x + \beta_2 \cdot x^2$
+
+Koden nedenfor viser, hvordan man kan fitte de to modeller i R med `lm()`-funktionen
+
+```{r}
+linreg <- lm(strength ~ hardwood, data = paperstr)
+kvadreg <- lm(strength ~ hardwood + I(hardwood^2), data = paperstr)
+```
+
+Vi kender til fortolkningen af output (dvs. estimater, SE, t-test) for en lineær regressionsmodel
+
+```{r}
+summary(linreg)
+```
+
+Nedenfor vises outputtet fra den kvadratiske regressionsmodel
+
+```{r}
+summary(kvadreg)
+```
+
+**Forklaring:** Modellen udtrykker at den gennemsnitlige styrke (E(y)) som funktion af indeholdet af hardwood (`x`) er givet ved et andengradspolynomium
+
+$$E(y) = \alpha + \beta_1 \cdot x + \beta_2 \cdot x^2$$
+
+Når man kigger på output / `summary(kvadreg)`, så er der en linje som knytter sig til hver af de tre parametre
+
+* linjen `(Intercept)` knytter sig til parameteren $\alpha$
+* linjen `hardwood` knytter sig til parameteren $\beta_1$
+* linjen `I(hardwood^2)` knytter sig til parameteren $\beta_2$
+
+Som altid angiver de fire søjler (under `Coefficients:`)
+
+* (punkt)estimat for parameteren
+* standard error (SE) for parameteren
+* t-teststørrelsen for test af hypotesen om, at parameteren er lig med 0 (ikke altid praktisk relevant)
+* p-værdien for t-testet
+
+## Modelkontrol
+
+Vi udfører modelkontrol af hver af de to modeller ved at se på
+
+* et residualplot af de standardiserede residualer mod de fittede værdier
+* et residualplot af de standardiserede residualer mod den forklarende variabel x (dvs. `hardwood`)
+* et QQ-plot af de standardiserede residualer
+
+### Modelkontrol for lineær regressionsmodel
+
+```{r}
+par(mfrow=c(1,3))
+plot(fitted(linreg), rstandard(linreg), xlab="Fittede vaerdier", ylab="Std. residualer", main="Kraftpapir, lineaer regr.")
+abline(h=0, lty=2)
+plot(paperstr$hardwood, rstandard(linreg), xlab="hardwood", ylab="Std. residualer", main="Kraftpapir, lineaer regr.")
+abline(h=0, lty=2)
+qqnorm(rstandard(linreg))
+abline(0,1, lty=2)
+```
+
+Som nævnt ovenfor er der ingen forskel på de to typer residualplot til venstre, når man blot betragter en lineær regressionsmodel. Vi konkluderer at
+
+* Residualplottet ser helt forfærdeligt ud - tydelig kvadratisk sammenhæng som man også sagtens kunne se på det oprindelige dataplot (fra forelæsningen)
+
+* QQ-plottet ser egentlig OK ud, men det er ligegyldigt når residualplottet er så håbøst.
+
+### Modelkontrol for kvadratisk regressionsmodel
+
+```{r}
+par(mfrow=c(1,3))
+plot(fitted(kvadreg), rstandard(kvadreg), xlab="Fittede vaerdier", ylab="Std. residualer", main="Kraftpapir, kvadratisk regr.")
+abline(h=0, lty=2)
+plot(paperstr$hardwood, rstandard(kvadreg), xlab="hardwood", ylab="Std. residualer", main="Kraftpapir, kvadratisk regr.")
+abline(h=0, lty=2)
+qqnorm(rstandard(kvadreg))
+abline(0,1, lty=2)
+```
+
+Vi konkluderer at
+
+* Det ser bedre ud, men er stadig ikke helt overbevisende. Der “mangler” negative residualer for lave fittede værdier. Men skal man vælge mellem de to modeller, er den kvadratiske så klart at foretrække.
+* QQ-plottet i sig selv ser fornuftigt ud, da punkter ikke afviger systematiske fra den rette linje.
+
+## Prædiktionsintervaller
+
+Nedenfor vises, hvordan man kan lave prædiktioner af styrken (`strength`) ud fra indholdet af `hardwood`. Vi ønsker at lave 95 % prædiktionsintervaller som indeholder nye *observerede* værdier af styrken med en sandsynlighed på 95 %. Vi laver prædiktionsintervaller baseret på
+
+* den lineære regressionsmodel (som vi altså ikke kunne validere ved modelkontrollen)
+* den kvadratiske regressionsmodel (hvor modelantagelserne i højere grad er opfyldt)
+
+Bemærk, at vi laver prædiktionsværdier for alle værdier af `hardwood` fra 1 til 15 i spring af 2
+```{r}
+newHardwood <- seq(1, 15, by = 2)
+newHardwood
+newData <- data.frame(hardwood = newHardwood)
+pred_lin <- predict(linreg, newData, interval = "p")
+pred_lin ### praediktion, lineaer reg.
+pred_kvad <- predict(kvadreg, newData, interval = "p")
+pred_kvad ### praediktion, kvadratisk reg. 
+```
+
+### Visualisering af prædiktionsintervaller
+
+Prædiktionsintervallerne visualiseres her på et scatterplot (ikke pensum)
+
+* med blå: prædikteret værdi og øvre/nedre grænse for et 95 % prædiktionsinterval baseret på en lineær regressionsmodel
+
+* med rød: prædikteret værdi og øvre/nedre grænse for et 95 % prædiktionsinterval baseret på en lineær regressionsmodel
+
+* på figuren til højre er desuden anført 95 % - konfidensintervaller for den gennemsnitlige værdi af styrken (skraverede områder)
+
+```{r}
+
+par(mfrow = c(1, 2))
+### praediktionsintervaller
+plot(paperstr$hardwood, paperstr$strength, pch = 16, xlab = "Hardwood (pct)", ylab = "Strength", main = "Example 8.3: Kraftpapir", ylim = c(-20, 80))
+lines(newHardwood, pred_lin[, "fit"], col = "blue")
+lines(newHardwood, pred_lin[, "lwr"], col = "blue", lty = 2)
+lines(newHardwood, pred_lin[, "upr"], col = "blue", lty = 2)
+
+lines(newHardwood, pred_kvad[, "fit"], col = "red")
+lines(newHardwood, pred_kvad[, "lwr"], col = "red", lty = 2)
+lines(newHardwood, pred_kvad[, "upr"], col = "red", lty = 2)
+
+ki_lin <- predict(linreg, newData, interval = "c") ### konfidensinterval, lineaer reg.
+ki_kvad <- predict(kvadreg, newData, interval = "c") ### konfidensinterval, kvadratisk reg.
+plot(paperstr$hardwood, paperstr$strength, pch = 16, xlab = "Hardwood (pct)", ylab = "Strength", main = "Example 8.3: Kraftpapir", ylim = c(-20, 80))
+polygon(c(newHardwood, rev(newHardwood)), c(ki_lin[,"lwr"], rev(ki_lin[,"upr"])), col = "lightblue")
+polygon(c(newHardwood, rev(newHardwood)), c(ki_kvad[,"lwr"], rev(ki_kvad[,"upr"])), col = "pink")
+lines(newHardwood, pred_lin[, "fit"], col = "blue")
+lines(newHardwood, pred_lin[, "lwr"], col = "blue", lty = 2)
+lines(newHardwood, pred_lin[, "upr"], col = "blue", lty = 2)
+
+lines(newHardwood, pred_kvad[, "fit"], col = "red")
+lines(newHardwood, pred_kvad[, "lwr"], col = "red", lty = 2)
+lines(newHardwood, pred_kvad[, "upr"], col = "red", lty = 2)
+points(paperstr$hardwood, paperstr$strength, pch = 16)
+```
+Vi konkluderer at
+
+* Prædiktionsintervallerne fra den lineære regressionsmodel er meget brede. Ofte indeholder de også negative værdier (!) men da vi tidligere konkluderede, at modelantagelserne *ikke* holder for en lineær regressionsmodel, så har vi alligevel ikke meget tiltro til disse prædiktionsintervaller.
+
+* Vi ser en vis systematik i om målepunkterne ligger over eller under den kvadratiske regressionskurve (rød, fuldtoptrukket), hvilket vi også observerede i forbindelse med modelkontrol. Dog virker prædiktionsintervallerne noget mere rimelige. 
+
+* Prædiktionsintervallerne er bredere end konfidensintervallerne, fordi prædiktionsintervallerne skal indeholde 95 % af (de nye) målinger, men konfidensintervallerne kun skal indeholde middelværdien med 95 % sandsynlighed.
+
+# Organisk materiale i gødning (ensidet ANOVA)
+
+## Indlæsning af data og statistisk model
+
+Vi regner på datasættet antibio der er blevet diskuteret ved flere forlæsninger og tidligere R-programmer (-se også s. 53 og 114 i lærebogen).
+
+```{r}
+library(isdals)
+data(antibio)
+head(antibio)
+```
+
+Vi beskriver variationen i målingerne af organisk stof ved en ensidet variansanalysemodel, som i R fitted med `lm()`
+
+```{r}
+model1 <- lm(org ~ type, data = antibio)
+```
+
+## Modelkontrol
+
+Den grundlæggende antagelse er at målingernes variation omkring gruppegennemsnittet kan beskrives ud fra fejlled (eng: *remainder terms*) $e_1, \ldots, e_n$ som
+
+* har middelværdi 0
+* har samme spredning
+* er normalfordelt
+* er uafhængige
+
+I praksis undersøges modelantagelserne ved at udregne residualerne, som kan udtrækkes fra den ensidede variansanalysemodel med `resid()`.
+
+```{r}
+resid(model1) ### udtrækker residualerne
+```
+
+Residualerne er blot observationerne/målingerne af organisk stof fratrukket gennemsnittet af målingerne for de relevante gruppe( dvs. `fodertype`). Residualer kan opfattes som vores bedst bud på fejledene ($e_1, \ldots, e_n$), der ifølge modelantagelserne bør være uafhængige og normalfordelte $~N(0,\sigma^2)$.
+
+I praksis er residualerne ikke helt normalfordelte med samme varians fordi
+
+* residualerne er beregne ved at trække et gruppegennemsnit fra målingerne ($y_i$) og gruppegennemsnittet er kun et estimat for den sande gruppemiddelværdi i hele populationen
+
+* gruppegennemsnittene er ikke estimeret på baggrund af de samme antal målinger i hver gruppe
+
+For at kompensere for dette (og foretage en fair sammenligning som er mere uafhængig af antal målinger i hver gruppe), så arbejder vi ofte med de **standardiserede residualer** der i R kan udtrækkes med `rstandard()`
+
+```{r}
+rstandard(model1) ### udtrækker de standardiserede residualer
+```
+
+Vi checker den ensidede variansanalysemodel ved at lave
+
+* et residualplot: af de standadiserede residualer mod gruppegennemsnittene
+* et QQ-plot: af de standardiserede residualer
+
+### Residualplot
+
+```{r}
+plot(fitted(model1), rstandard(model1), pch = 16, xlab = "Predicted values (group means)", ylab = "Standardized residuals")
+```
+
+Vi konkluderer at
+
+* gennemsnittet af residualerne er ca. 0 uanset værdien af gruppegennemsnittet (*predicted values*)
+* der er ca. samme spredning af residualerne i alle grupper (*varianshomogenitet*)
+
+### QQ-plot
+
+```{r}
+qqnorm(rstandard(model1), pch = 16)
+abline(0, 1, lwd = 2, col = "red")
+```
+
+På baggrund af QQ-plottet konkluderes at
+
+* punkterne afviger ikke systematisk fra den rette linjen
+* dette fortolkes som at de standardiserede residualer med god tilnærmelse kan antages at følge en standardnormalfordeling (med middelværdi 0 og varians 1)
+
+### Konklusion
+
+Hverken residualplottet eller QQ-plottet giver anledning til at stille spørgsmålstegn ved antagelser om, at målingerne af organisk materiale kan beskrives ved en ensidet variansanalysemodel.
+
+
+## Repetition: estimation, konfidensintervaller og test
+
+For fuldstændighedens skyld repeteres her (kort) den statistiske analyse af dataæsttet `antibio`.
+
+### Estimation
+
+Vores primære fokus ligger i at undersøge om indholdet af organisk stof er forskelligt mellem kontrolgruppen (`Control`) og de øvrige grupper.
+
+Vi sørger derfor for at parametrisere modellen, så R angiver estimatet hørende til kontrolgruppen og forskellene til de øvrige grupper.
+
+```{r}
+antibio$myType <- relevel(antibio$type, ref="Control")
+model1alt <- lm(org ~ myType, data=antibio)
+summary(model1alt)
+```
+
+De 6 linjer i tabellen (`Coefficients`) vedr. kontrolgruppen, forskellen mellem `Alfacyp` og `Control` osv. Husk at tallene i de forskellige søjler angiver
+
+* værdien af estimatet (gruppegennemsnit for kontrolgruppe eller en forskel)
+* standard error (SE) på estimatet
+* værdien af t-teststørrelsen for test af hypotense om at estimatet kan antages at være 0
+* en oversættelse af t-teststørrelsen til en p-værdi
+
+**Træningsopgave:** Beregn selv t-teststørrelsen ud fra estimat og SE, og kontroller at forstår, hvordan t-teststørrelsen omregnes til en p-værdi. Antallet af frihedsgrader (her: 28)  aflæses under `Residual standard error`.
+
+### Konfidensintervaller
+
+Konfidensintervaller for den parametrisering som R benytter kan udtrækkes med `confint()`
+
+```{r}
+confint(model1alt)
+```
+
+**Fortolkning:**
+
+* Alle værdier mellem 2.502 og 2.705 for populationsmiddelværdien i kontrolgruppen er i overensstemmelse med de observerede data, når vi ønsker et interval estimat (=konfidensinterval) med en dækningsgrad på 95 %.
+
+* Alle værdier mellem 0.148 og 0.436 for *forskellen mellem populationsmiddelværdien i `Alfacyp` og kontrolgruppen* er i overensstemmelse med de observerede data, når vi ønsker et interval estimat (=konfidensinterval) med en dækningsgrad på 95 %.
+
+### F-test
+
+Ønsker vi at foretage et test for, om populationsmiddelværdierne for alle 6 grupper kan antages at være ens kan vi fx. lave en sammenligning (med `anova`) mellem to modeller
+
+* *fuld model*: ensidet anova med 6 gruppegennemsnit
+* *nulmodel*: model hvor data opfattes som en sample fra en gruppe (alle gruppegennemsnit antages at være ens!)
+
+```{r}
+fuldmodel <- lm(org ~ type, data = antibio)
+nulmodel <- lm(org ~ 1, data = antibio)
+anova(nulmodel, fuldmodel)
+1 - pf(7.9726, 5, 28)
+```
+
+**Konklusion:** F-teststørrelsen for test af hypotesen om at alle gruppemiddelværdier er ens bliver 7.97. Ved opslag i en F-fordeling med (6-1, 34-6) = (5, 28) frihedsgrader (i R: `1 - pf(7.9726, 5, 28)`) fås en p-værdi på `8.953073e-05`. Vi forkaster derfor hypotesen om, at alle gruppemiddelværdier kan antages at være ens.
+
+## Prædiktion
+
+Et 95 % - prædiktionsinterval er et forsøg på at angive et interval, som med 95 % sandsynlighed vil indeholde en ny/fremtidig måling. Nedenfor vises, hvordan man kan konstruere et 95 % - prædiktionsområde for nye målinger hørende til hver af de 6 grupper (`type`) i datasættet.
+
+```{r}
+model1 <- lm(org ~ type, data = antibio)
+newData <- data.frame(type = c("Alfacyp", "Control",  "Enroflox", "Fenbenda", "Ivermect", "Spiramyc"))
+predict(model1, newData, interval = "prediction", level = 0.95)
+```
+
+Kompenenterne i R koden er følgende
+
+* `model1`: angiver modellen der benyttes til at foretage prædiktion
+* `newData`: angiver de kombinationer af variable i modellen, hvor vi ønsker at foretage en prædiktion. Her ønskes en prædiktion for alle de 6 typer/grupper som optræder i datasættet.
+* `predict`: beregner 95 % - konfidensintervaller ud fra modellen `model1` for kombinationerne angivet i datasættet `newData`
+
+**Fortolkning:** Intervallet 2.334-2.873 vil indeholde 95 % af nye/fremtidige målinger af indholdet af organisk stof i gødningsprøver fra `Control`-gruppen. Bemærk forskellen til 95 % - konfidensintervallet for gruppemiddelværdien i kontrolgruppen på 2.502-2.705 udregnet ovenfor. Konfidensintervallet udtaler som om gennemsnittet/middelværdien mens prædiktionsintervallet udtaler sig om enkeltobservationer (og derfor er intervallet bredere).
