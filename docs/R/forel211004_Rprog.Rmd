@@ -1,0 +1,226 @@
+---
+title: 'StatData1: forel211004'
+author: "Anders Tolver"
+output:   
+  html_document:
+    theme: sandstone
+    toc: true
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+
+***
+
+# Eksempel med elektriske ål
+
+Formålet med eksemplet er at illustrere
+
+* at der kan være variable i et datasæt, som både kan indgå som faktor (kategorisk variabel) og som kontinuert (kvantitativ variabel) i en statistisk model
+
+* hvordan man kan *teste* om det er rimeligt at lade middelværdien være en lineær funktion af den forklarende variabel (som fx. i en lineær regressionsmodel)
+
+## Indlæsning og visualisering af data
+
+Datasættet `eels` ligger i `isdals` R-pakken
+
+```{r}
+library(isdals)
+data(eels)
+head(eels)
+```
+
+Data består af sammenhørende værdier af vandtemperatur (`temp`) og frekvensen (`freq`) af de elektriske signaler, som ålen udsender.
+
+```{r}
+ggplot(data = eels) + geom_point(aes(x = temp, y = freq), color = "red", size = 2) + labs(x = "Temperatur", y = "Frekvens", title = "Elektriske aal")
+```
+
+## Lineær regression og ensidet ANOVA
+
+Responsvariablen er den kvantitative variabel `freq` der indholder målinger af frekvensen af de elektriske signaler, som ålen udsender.
+
+Vi ønsker at forklare variationen i frekvensen vha. vandtemperaturen (`temp`), der også er en kvantitativ variable. 
+
+Plottet ovenfor lægger op til, at vi kan benytte en lineær regressionsmodel, som fittes nedenfor ...
+
+```{r}
+linreg <- lm(freq ~ temp, data=eels)
+summary(linreg)$coefficients
+```
+
+**Bemærk:**  **Eftersom der er gentagelser for hver temperatur** så er det også en mulighed at lave ensidet ANOVA. Vi kan også tænke på data som om, at vi har foretaget flere målinger for et antal forskellige vandtemperaturer. Vi kan tænke på målingerne som inddelt i grupper efter vandtemperaturen, hvor der både er forskel i målingerne af frekvensen inden for hver gruppe, og hvor der kan være forskelle mellem middelværdien i hver gruppe (det er det vi vil undersøge med analysen!).
+
+Når vi laver ANOVA, skal vi huske at bruge temperaturevariablen
+om til en kategorisk variabel (faktor).
+
+```{r}
+eels <- transform(eels, tempFac = factor(temp))
+ensidet <- lm(freq ~ tempFac, data=eels)
+summary(ensidet)$coefficients
+```
+
+### Tillægsspørgsmål til output fra ensidet ANOVA
+
+Lad os kigge på et summary af den ensidede variansanalysemodel
+
+```{r}
+summary(ensidet)
+```
+
+* Opskriv på papir (for dig selv) modellen for ensidet ANOVA og gør dig klart hvor mange populationsparametre, der indgår i modellen.
+
+* Hvad er estimatet for residualspredningen i modellen, og hvad er fortolkningen af denne parameter?
+
+* Hvilken parameter i modellen estimeres i linjen som R kalder for `(Intercept)`?
+    - Hvilken hypotese kan man teste ved brug af værdierne i søjlerne `t value` og `Pr(>|t|)`?
+    - Hvad betyder tallet `4.551`, og hvordan er det fremkommet ud fra estimatet for residualspredningen?
+    - Brug output til at konstruere et 95 % - konfidensinterval for parameteren der estimeres i linjen som R kalder for `(Intercept)`.
+    
+* Hvilken parameter i modellen estimeres i linjen som R kalder for `tempFac22`?
+    - Hvilken hypotese kan man teste ved brug af værdierne i søjlerne `t value` og `Pr(>|t|)`?
+    - (Svært:) Hvad betyder tallet `6.437`, og hvordan er det fremkommet ud fra estimatet for residualspredningen?
+    - Brug output til at konstruere et 95 % - konfidensinterval for parameteren der estimeres i linjen som R kalder for `tempFac22`.
+
+Når du har udregnet konfidensintervallerne ovenfor, så kan du sammenligne med resultaterne fra nedenstående output ...
+
+```{r}
+confint(ensidet)
+```
+
+* Forklar, hvordan man kan få R til at beregne et 95 % - konfidensinterval for denne gennemsnitlige frekvens af de elektriske signaler som ål udsender i vand der har en temperatur på 30 grader.
+
+* Forklar, hvad fortolkningen er af de intervaller, som R udregner med følgende kode
+
+```{r}
+new_data <- data.frame(tempFac = c("20", "22", "23"))
+predict(ensidet, new_data, interval = "p")
+```
+
+* Forklar/diskuter, hvorfor følgende R kode vil give en fejl
+
+```{r eval = F}
+new_data <- data.frame(tempFac = c("20", "22", "24"))
+predict(ensidet, new_data, interval = "p")
+```
+## Modelkontrol
+
+Som vi lærte i sidste uge, så foretages modelkontrol primært ved at se på residualplot og QQ-plot.
+
+### For lineær regressionsmodel
+
+```{r fig.show = "hold", out.width = "49%"}
+plot(fitted(linreg), rstandard(linreg), pch = 16, main = "Linear regression", cex.main = 1.5, cex.lab = 1.5)
+abline(h = 0, lty = 2)
+qqnorm(rstandard(linreg), pch = 16)
+abline(0, 1, lwd = 2, lty = 2)
+```
+
+**Konklusion:**
+
+* Der ses et svag mønster på residualplottet, som kan tyde på, at den lineære struktur af middelværdien ikke passer helt godt på data. Residualerne ligger ikke lige godt omkring 0 for alle fittede værdier.
+
+* Spredningen på residualplottet ser ud til at være ens for alle fittede værdier.
+
+* Punkterne på QQ-plottet afviger ikke systematisk fra den rette linje, så antagelsen om at residualerne/fejlene er normalfordelte virker rimelige.
+
+### For ensidet ANOVA
+
+```{r fig.show = "hold", out.width = "49%"}
+plot(fitted(ensidet), rstandard(ensidet), pch = 16, main = "Ensidet ANOVA", cex.main = 1.5, cex.lab = 1.5)
+abline(h = 0, lty = 2)
+qqnorm(rstandard(ensidet), pch = 16)
+abline(0, 1, lwd = 2, lty = 2)
+```
+
+**Konklusion:**
+
+* Residualerne ligger pænt omkring 0 for alle fittede værdier.
+
+* Spredningen på residualplottet ser ud til at være ens for alle fittede værdier.
+
+* Punkterne på QQ-plottet afviger ikke systematisk fra den rette linje, så antagelsen om at residualerne/fejlene er normalfordelte virker rimelige.
+
+## Test for linearitet
+
+### ... mod den ensidet ANOVA
+
+Den ensidede ANOVA estimerer et gruppegennemsnit, for hver at de grupper (her: temperaturer) der optræder i datasættet. Middelværdien af responsen (her: frekvensen `freq`) for en observation er (populations)gennemsnittet for den gruppe (dvs. tempereatur), som hører til observationen. Men der er ikkke nogen restriktioner på, hvordan gruppegennemsnittene svarende til forskellige temperatur-grupper skal høre sammen, når vi blot laver en ensidet variansanalyse (ANOVA).
+
+Når vi laver en lineær regressionsmodel, så laver vi en meget kraftig antagelse om, at den den forventede værdi af responsen (her: frekvensen `freq`) skal være en lineær funktion af temperaturen. Specielt skal den forventede værdi af `freq` for temperaturerne 22 og 23 grader ligge lige så tæt på hinanden som den forventede værdi for temperaturerne 27 og 28. I modsætning til for den ensidede ANOVA, så er der altså en *restriktion på*  hvordan de forventede værdier (også kaldet middelværdierne) for de forskellige temperaturer skal hænge sammen.
+
+Da den lineære regressionsmodel kan opfattes som en ensidet ANOVA, hvor man har lagt yderligere restriktioner på middelværdier/gruppegennemsnit, så kan vi bruge et F-test (jf. forelæsning og R-program til 27/9-2021) til at **teste** om **den lineære regressionsmodel** giver en fornuftig beskrivelse af data. Hvis vi forkaster hypotesen, så er konklusionen at linearitetsantagelsen i den lineære regressionsmodel ikke er i overensstemmelse med de observerede data.
+
+```{r}
+anova(linreg, ensidet)
+```
+
+**Konklusion:**
+
+* F-teststørrelsen for sammenligning af nulmodellen (lineær regression) mod den fulde model (ensidet ANOVA) beregnes til 0.7049.
+
+* Under nulmodellen vil F-teststørrelsen være F-fordelt med (k - 2, n - k)-frihedsgrader, hvor
+    - `n = 21`: er antallet af observationer
+    - `k = 7`: er antallaet af parametre under den fulde model (her er det blot antal grupper i den ensidede ANOVA)
+    - `2`-tallet optræder fordi der er 2 parametre i nulmodellen (den lineære regressionsmodel har en skæring og en hældning)
+    
+* R oversætter F-teststørrelsen til en p-værdi på 0.6292 (men udregn evt. selv følgende i R: `1 - pf(0.7049, 7 - 2,  21 - 7)`)
+
+* Data giver ikke anledning til at forkaste nulhypotesen / linearitetshypotesen.
+
+### ... mod en kvadratisk regressionsmodel
+
+Det er også muligt at test hypotese om, at middelværdien af `freq` er en lineær funktion af temperaturen (`temp`) ved at **sammenligne den lineære regressionsmodel med en kvadratisk regressionsmodel**.
+
+En  kvadratisk regressionsmodel siger, at middelværdien er givet ved
+
+$$
+\alpha + \beta \cdot \texttt{temp}_i + \delta \cdot \texttt{temp}_i^2.
+$$
+Den lineære regressionsmodel er et specialtilfælde af den kvadratiske regressionsmodel svarende til at 
+
+$$\delta = 0.$$
+
+Vi kan udføre testet for hypotesen på to måder
+
+* 1. som et t-test ved at aflæse ud fra `summary()` af den kvadratiske regressionsmodel i den linje der vedrører estimatet for parameteren $\delta$
+
+* 2. ved at opfatte den kvadratiske regressionsmodel som den *fulde model* og den lineære regressionsmodel som *nulmodellen* og udføre testet som et F-test.
+
+**1. som t-test**
+
+```{r}
+kvreg <- lm(freq ~ temp + I(temp^2), data=eels)
+summary(kvreg)
+```
+
+Vi aflæser, at
+
+* estimatet for det kvadratiske led bliver: $\hat{\delta} = -0.3060$
+* at t-teststørrelsen for test af hypotesen $\delta = 0$ bliver: -1.849
+* at p-værdien ved opslag i en t-fordeling med $18$ frihedsgrader (`degrees of freedom`) bliver: 0.08092
+
+På et 5 % signifikansniveau vil man derfor ikke forkaste nulhypotesen. Linearitetsantagelsen virker altså rimelig i forhold til fx. en antagelse om, at sammenhængen bør modelleres ved en kvadratisk funktion (dvs. et 2.gradspolynomium).
+
+
+
+**2. som F-test**
+
+```{r}
+anova(linreg, kvreg)
+```
+
+* F-teststørrelsen for sammenligning af nulmodellen (lineær regression) mod den fulde model (kvadratisk ANOVA) beregnes til 3.4196.
+
+* Under nulmodellen vil F-teststørrelsen være F-fordelt med (k - 2, n - k)-frihedsgrader, hvor
+    - `n = 21`: er antallet af observationer
+    - `k = 3`: er antallaet af parametre under den fulde model (her er det de tre parametre i den kvadratiske regressionsmodel)
+    - `2`-tallet optræder fordi der er 2 parametre i nulmodellen (den lineære regressionsmodel har en skæring og en hældning)
+    
+* R oversætter F-teststørrelsen til en p-værdi på 0.08092 (men udregn evt. selv følgende i R: `1 - pf(3.4196, 3 - 2,  21 - 3)`)
+
+* Data giver ikke anledning til at forkaste nulhypotesen / linearitetshypotesen.
