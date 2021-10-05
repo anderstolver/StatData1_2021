@@ -1,0 +1,108 @@
+---
+title: 'Eksempel 8.3: Hardwood in brown paper'
+author: "Anders Tolver"
+output:   
+  html_document:
+    theme: sandstone
+    toc: true
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+# Indlæsning af data
+
+* **Responssvariabel:** papirstyrke (`strengt`)
+* **Forklarende variabel:** indhold af *hardwood* i procent (`hardwood`)
+
+```{r}
+library(isdals)
+data(paperstr)
+paperstr
+```
+
+# Lineær regressionsmodel
+
+```{r}
+model1 <- lm(strength ~ hardwood, data = paperstr)
+```
+
+# Kvadratisk regressionsmodel
+
+```{r}
+model2 <- lm(strength ~ hardwood + I(hardwood^2), data = paperstr)
+```
+
+# Kubisk regressionsmodel
+
+```{r}
+model3 <- lm(strength ~ hardwood + I(hardwood^2) + I(hardwood^3), data = paperstr)
+```
+
+# Polynomiel regression af orden 5 og 15
+
+```{r}
+model5 <- lm(strength ~ poly(hardwood, 5), data = paperstr)
+model15 <- lm(strength ~ poly(hardwood, 15), data = paperstr)
+
+
+
+
+```
+
+# Prædiktionsintervaller for papirstyrke
+
+Baseret på alle regressionsmodellerne ovenfor bestemmes nu ved brug af `predict()`-funktionen 95 % - prædiktionsintervaller for papirstyrken i nye observationer svarende til papirstyrker fra 1 til 15 pct (i trin på 0.2).
+
+```{r}
+newHardwood <- seq(1, 15, by = 0.2)
+newData <- data.frame(hardwood = seq(1, 15, by = 0.2))
+pred1 <- predict(model1, newdata = newData, interval = "p")
+pred2 <- predict(model2, newdata = newData, interval = "p")
+pred3 <- predict(model3, newdata = newData, interval = "p")
+pred5 <- predict(model5, newdata = newData, interval = "p")
+pred15 <- predict(model15, newdata = newData, interval = "p")
+```
+
+Først optegnes den gennemsnitlige (dvs. middelværdien af) papirstyrken som funktion af indholdet af *hardwood* for hver af regressionsmodellerne.
+
+```{r}
+plot(paperstr$hardwood, paperstr$strength, pch = 16, cex = 1, xlab = "Hardwood (pct)", ylab = "Strength")
+lines(newHardwood, pred1[,1], lwd = 2)
+lines(newHardwood, pred2[,1], col = "red", lwd = 2)
+lines(newHardwood, pred3[,1], col = "green", lwd = 2)
+lines(newHardwood, pred5[,1], col = "blue", lwd = 2)
+lines(newHardwood, pred15[,1], col = "pink", lwd = 2)
+```
+
+Det er klart, at de observerede data kan approksimeres bedre jo højere grad af polymier vi tillader i modellen. Modellen estimeres jo netop på baggrund af de observerede datapunkt.
+
+I princippet er man ofte interesseret i at bruge modellerne til at kunne lave præcise prædiktioner for *nye/fremtidige* observationer. Nedenfor indtegnes 95 % - prædiktionsintervaller for nye observationer baseret på hver af regressionsmodellerne ovenfor.
+
+**Konklusion:** Vi kan gøre lave meget bedre/mere præcise prædiktioner med en kvadratiske regressionsmodel i forhold til en lineær regressionsmodel. Der vindes lidt ved at øge polynomiets grad fra 2 til 3 eller 5, men det er ikke meget. På et tidspunkt går det galt, og modellen begynder at overfitte til data, hvilket antydes når man laver polynomiel regression af grad 15. I praksis er der et såkaldt trade-off mellem modellens prædiktionsvarians og den afvigelse/bias der ligger i, hvor godt modellen kan ramme middelværdien. Dette er et vigtigt issue, når man bruge avancerede metoder (machine learning) til at lave prædiktive modeller til store og komplekse datasæt.
+
+```{r}
+plot(newHardwood, pred1[, 1], type = "l", lwd = 2, col = "red", xlab = "Hardwood (pct)", ylab = "Strength", main = "Lineær regression", ylim = c(0, 80))
+lines(newHardwood, pred1[,2], lwd = 1, lty = 2, col = "red")
+lines(newHardwood, pred1[,3], lwd = 1, lty = 2, col = "red")
+
+plot(newHardwood, pred2[, 1], type = "l", lwd = 2, col = "green", xlab = "Hardwood (pct)", ylab = "Strength", main = "Kvadratisk regression", ylim = c(0, 80))
+lines(newHardwood, pred2[,2], lwd = 1, lty = 2, col = "green")
+lines(newHardwood, pred2[,3], lwd = 1, lty = 2, col = "green")
+
+plot(newHardwood, pred3[, 1], type = "l", lwd = 2, col = "brown", xlab = "Hardwood (pct)", ylab = "Strength", main = "Kubisk regression", ylim = c(0, 80))
+lines(newHardwood, pred3[,2], lwd = 1, lty = 2, col = "brown")
+lines(newHardwood, pred3[,3], lwd = 1, lty = 2, col = "brown")
+
+plot(newHardwood, pred5[, 1], type = "l", lwd = 2, col = "blue", xlab = "Hardwood (pct)", ylab = "Strength", main = "Polynomial regression (grad 5)", ylim = c(0, 80))
+lines(newHardwood, pred5[,2], lwd = 1, lty = 2, col = "blue")
+lines(newHardwood, pred5[,3], lwd = 1, lty = 2, col = "blue")
+
+plot(newHardwood, pred15[, 1], type = "l", lwd = 2, col = "pink", xlab = "Hardwood (pct)", ylab = "Strength", main = "Polynomial regression (grad 15)", ylim = c(0, 80))
+lines(newHardwood, pred15[,2], lwd = 1, lty = 2, col = "pink")
+lines(newHardwood, pred15[,3], lwd = 1, lty = 2, col = "pink")
+```
+

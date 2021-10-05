@@ -1,0 +1,226 @@
+---
+title: 'StatData1: forel211006'
+author: "Anders Tolver"
+output:   
+  html_document:
+    theme: sandstone
+    toc: true
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+
+***
+
+# Eksempel 8.1: Volumen af kirsebærtræer
+
+Dette eksempel er et supplement til indholdet på forelæsningsslides fra d. 6/10-2021.
+
+Formålet med eksemplet er at
+
+* illustrere hvordan man laver multipel lineær regression i R
+* hvordan man fortolker output fra en regressionsmodel, hvor både respons og forklarende variable er blevet transformeret med logaritmen
+* illustrere, hvordan man kan teste en specifik/simpel hypotese om parametrene i en (multipel) lineær regressionsmodel
+
+## Indlæsning og visualisering af data
+
+```{r}
+library(isdals)
+data(trees)
+head(trees)
+```
+
+Datasættet indeholder målinger af tre kontinuerte variable for 31 kirsebærtræer
+
+* `Volume`: træets volumen i *cubit feet* (respons)
+* `Height`: træets højde i *feet* (forklarende variabel)
+* `Girth`: træets diamenter i *inches* (forklarende variabel)
+
+```{r, echo = F, out.width = "49%", fig.show = "hold"}
+library(isdals)
+data(trees)
+plot(trees$Height, trees$Volume, xlab = "Height in feet", ylab = "Volume in cubic feet", pch = 16
+     , cex.lab = 1.5, cex.axis = 1.5)
+plot(trees$Girth, trees$Volume, xlab = "Diameter in inches", ylab = "Volume in cubic feet", pch = 16, cex.lab = 1.5, cex.axis = 1.5)
+```
+
+## Multipel lineær regression på utransformerede data
+
+### Fit af model og estimater
+
+Her fittes en **multipel lineær regressionsmodel**
+
+```{r}
+multipel1 <- lm(Volume ~ Height + Girth, data = trees)
+summary(multipel1)
+```
+
+**Fortolkning:** Modellen udtrykker at det forventede `Volume` kan udtrykkes ved en ligning af formen
+
+$$
+\texttt{Volume} = \alpha + \beta_1 \cdot \texttt{Height} + \beta_2 \cdot \texttt{Girth}
+$$
+
+De tre datalinjer (under `Coefficients`) vedrører
+
+* `(Intercept)`: estimat, SE, test for parameteren $\alpha$
+* `Height`: estimat, SE, test for parameteren $\beta_1$
+* `Girth`: estimat, SE, test for parameteren $\beta_2$
+
+Specielt kan vi af outputtet læse at
+
+* det forventede volumen øges med 4.71 (cubic feet) hvis træets diameter øges med 1 *inch* (hvis ellers højden er uændret)
+
+### Modelkontrol
+
+Vi udfører modelkontrol af modellen ved at se på
+
+* et residualplot af de standardiserede residualer mod de fittede værdier
+* valgfrit: et residualplot af de standardiserede residualer mod hver af de forklarende variable (dvs. `Height` og `Girth`)
+* et QQ-plot af de standardiserede residualer
+
+```{r out.width = "49%", echo = F, fig.show = "hold"}
+plot(fitted(multipel1), rstandard(multipel1), xlab="Fittede vaerdier", ylab="Std. residualer", main="Mult. lin. regr.")
+abline(h=0, lty=2)
+plot(trees$Height, rstandard(multipel1), xlab="Height (hoejde)", ylab="Std. residualer", main="Mult. lin. regr.")
+abline(h=0, lty=2)
+plot(trees$Girth, rstandard(multipel1), xlab="Girth (diameter)", ylab="Std. residualer", main="Mult. lin. regr.")
+abline(h=0, lty=2)
+qqnorm(rstandard(multipel1))
+abline(0,1, lty=2)
+```
+
+**Konklusion:** Særligt på baggrund af de to residualplot til venstre er der noget som tyder på at
+
+* residualer til små fittede værdier er overvejende positive
+* variansen (af residualerne) vokser (lidt) med størrelsen af de fittede værdier
+* sammenhængen/middelværdistrukturen mellem `Girth` og `Volume` er ikke beskrevet helt perfekt. Vi ser overvejende positive residualer for små og store værdier af `Girth`, men der er mange negative residualer for middelstore værdier af `Girth`
+* punkterne på QQ-plottet ligger ret pænt omkring en ret linje (mens det giver først rigtig mening at fortolke på dette, når residualplottene er fornuftige)
+
+**Bemærk:** Det bliver lettere at fortolke figurerne ovenfor, når vi kan sammenligne med modelkontrollen fra modellen i næste afsnit.
+
+## Multipel lineær regression på logtransformerede data
+
+### Fit af model og estimater
+
+Her fittes en **multipel lineær regressionsmodel**, hvor både respons og forklarende variable log-transformeres ....
+
+```{r}
+multipel2 <- lm(log(Volume) ~ log(Height) + log(Girth)
+, data = trees)
+summary(multipel2)
+```
+
+**Fortolkning:** Modellen udtrykker at det forventede `log(Volume)` kan udtrykkes ved en ligning af formen
+
+$$
+\texttt{log(Volume)} = \alpha + \beta_1 \cdot \texttt{log(Height)} + \beta_2 \cdot \texttt{log(Girth)}
+$$
+
+De tre datalinjer (under `Coefficients`) vedrører
+
+* `(Intercept)`: estimat, SE, test for parameteren $\alpha$
+* `log(Height)`: estimat, SE, test for parameteren $\beta_1$
+* `log(Girth)`: estimat, SE, test for parameteren $\beta_2$
+
+Specielt kan vi af outputtet læse 
+
+* 1. den gennemsnitlige værdi af `log(Volume)` øges med 1.98 (cubic feet) hvis logaritmen til træets diameter (dvs. `log(Girth)`) øges med 1 *inch* (hvis ellers højden er uændret)
+* 2. medianen af `Volume` øges med en faktor `exp(1.983) = 7.265`  hvis logaritmen til træets diameter (dvs. `log(Girth)`) øges med 1  (hvis ellers højden er uændret).
+
+Vi bliver ikke nødvendigvis så meget klogere af tallene ovenfor, fordi det kan være svært at vurdere, hvad det egentlig betyder, at `log(Girth)` øges med 1. En mulig fortolkning er dog følgende
+
+* Hvis `Girth` bliver dobbelt så stor, så øges `log(Girth)` med `log(2)`=0.693, og så øges medianen for `Volume` med en faktor `exp(0.693*1.983)`=3.95. I grove træk vil en fordobling (x 2) af diameteren (`Girth`) altså modsvares af en firdobling (x 4) af medianen for `Volume` (hvis ellers højden er uændret).
+
+### Modelkontrol
+
+Vi udfører modelkontrol af modellen ved at se på
+
+* et residualplot af de standardiserede residualer mod de fittede værdier (på x-aksen)
+* valgfrit: et residualplot af de standardiserede residualer mod hver af de forklarende variable (dvs. `log(Height)` og `log(Girth)`)
+* et QQ-plot af de standardiserede residualer
+
+```{r out.width = "49%", echo = F, fig.show = "hold"}
+plot(fitted(multipel2), rstandard(multipel2), xlab="Fittede vaerdier", ylab="Std. residualer", main="Mult. lin. regr.")
+abline(h=0, lty=2)
+plot(log(trees$Height), rstandard(multipel2), xlab="log(Height) (hoejde)", ylab="Std. residualer", main="Mult. lin. regr.")
+abline(h=0, lty=2)
+plot(log(trees$Girth), rstandard(multipel2), xlab="log(Girth) (diameter)", ylab="Std. residualer", main="Mult. lin. regr.")
+abline(h=0, lty=2)
+qqnorm(rstandard(multipel2))
+abline(0,1, lty=2)
+```
+
+**Konklusion:** 
+
+* gennemsnittet af residualerne er ca. 0 uanset de fittede værider, og  der er ca. samme spredning af residualerne i alle grupper (varianshomogenitet)
+
+* samme kommentarer kan knyttes til de to øvrige residualplot (mod `log(Girth)` hhv. `log(Volume)`)
+* punkterne på QQ-plottet ligger ret pænt omkring en ret linje
+
+### Test af hypotese $H_0: \beta_1 = 1, \beta_2 = 2$
+
+Vi interesserer os for, om sammenhængen ml. `Volume` og (`Height`, `Girth`) kan beskrives ved en ligning af formen 
+
+$$
+\texttt{Volume} = c \cdot \texttt{Height}\cdot \texttt{Girth}^{2}
+$$
+
+Dette svarer (efter log-transformation) til en ligning af formen
+
+$$
+\texttt{log(Volume)} = \log(c) +  1\cdot \texttt{log(Height)} + 2 \cdot  \texttt{log(Girth)}
+$$
+
+Dette kan opfattes som en restriktion af parametrene i den multiple lineære regressionsmodel
+
+$$
+\texttt{log(Volume)}_i = \alpha + \beta_1 \cdot \texttt{log(Height)}_i + \beta_2 \cdot \texttt{log(Girth)}_i + e_i
+$$
+hvor vi sætter $\beta_1 = 1$ og $\beta_2 = 2$.
+
+Som beskrevet på slides 13-14 fra forelæsning d. 27/9-2021 (og i lærebogens Ch. 6.4), så kan vi teste hypotesen $H_0: \beta_1 = 1, \beta_2 = 2$ ved at fortage en sammenligne (med `anova()`) af
+
+* en *fuld model*: den multiple lineære regressionsmodel (kaldet `multipel2` ovenfor)
+* en *nul model*: den multiple lineære regressionsmodel, hvor vi tvinger $\beta_1$ til at være 1 og $\beta_2$ til at være 2 (men hvor $\alpha$ stadig kan estimeres frit)
+
+Ovenstående er blot en del af det generelle princip om, hvordan man kan teste en hypotese, som svarer til en restriktion af nogle parametre. Den eneste tekniske udfordring ligger i, hvordan man (i R) kan fitte de to modeller.
+
+Nedenfor vises to metoder til at producere de relevante F-test for hypotesen $H_0$.
+
+**Metode 1:** (som vist på forelæsningsslides)
+
+Funktionen `offset` (benyttet nedenfor) kan bruges til at tvinge et led ned over modellen, som har en bestemt form. Her tvinger vi leddet 
+$$1 \cdot \texttt{log(Height)}_i + 2 \cdot \texttt{log(Girth)}_i$$
+ ned over modellen, så R kun estimerer intercept-parameteren ($\alpha$). Den estimerede model (nulmodel) sammenlignes med den fuld (dvs. urestringerede multiple lineære regressionsmodel) ved et F-test.
+ 
+```{r}
+naiv <- lm(log(Volume) ~ offset(1*log(Height) + 2*log(Girth))
+, data=trees)
+anova(naiv, multipel2)
+```
+
+**Konklusion:** Med en p-værdi på $0.85$ vælger vi ikke at forkaste nulhypotesen $H_0$. 
+
+**Metode 2:** Her benytter vi os af et trick: ved at fratrække leddet `1*log(Height) - 2*log(Girth)` fra responsen (på venstresiden i `lm()`), så tvinger vi R til at benytte en parametrisering, hvor $\beta_1-$ og $\beta_2-$koefficienterne på `log(Height)` og `log(Girth)` ses i forhold til værdierne 1 hhv. 2 (dvs. $H_0$). Prøv fx. at sammenligne estimaterne fra et `summary` af modellerne `multipel2` (ovenfor) og `fullModel` (nedenfor).
+
+```{r}
+fuldModel <- lm(log(Volume) - log(Height) - 2*log(Girth)  ~ log(Height) + log(Girth)
+, data = trees)
+summary(fuldModel)
+```
+
+Under hypotesen $H_0$ så bør den modificerede respons `log(Volume) - log(Height) - 2*log(Girth)` slet ikke afhænge af hverken `log(Height)` eller `log(Girth)`. Derfor fittes den restringerede model (`nulModel`) ved blot at estimere et intercept (svarende til formelsyntaksen `~ 1`). De to modeller testes imod hinanden ved et kald til `anova()`.
+
+```{r}
+nulModel <- lm(log(Volume) - log(Height) - 2*log(Girth)  ~ 1
+, data = trees)
+anova(nulModel, fuldModel)
+```
+
+**Konklusion:** Vi genkender p-værdien på $0.85$, og vælger ikke at forkaste nulhypotesen $H_0$. 
+
