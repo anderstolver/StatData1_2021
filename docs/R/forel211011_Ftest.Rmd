@@ -1,0 +1,106 @@
+---
+title: 'StatData 1: lidt mere om F-test'
+author: "Anders Tolver"
+date: "10/11/2021"
+output:   
+  html_document:
+    theme: sandstone
+    toc: true
+    code_folding: hide
+---
+
+```{r message = FALSE}
+library(readr)
+library(tidyverse)
+```
+
+***
+
+Supplerende R program benyttet ved forelæsning d. 11/10-2021 i StatData1.
+
+I programmet afprøves forskellige metoder (dvs. R kode) til at producere et F-test i ensidet ANOVA.
+
+***
+
+Vi arbejder med datasættet bestående af højdemålinger af studerende på StatData1 i 2017. For mere information henvises til R-programmet hørende til dagens forelæsning (11/10-2021).
+
+Indlæs data m.m. (kopieret fra program til dagens forelæsning)
+
+```{r}
+library(readxl)
+Sys.setlocale("LC_ALL", 'en_US.UTF-8')
+data <- read_excel("../data/stud2017-v2.xls")
+useData <- select(data, studie, kon, hojde)
+useData$studie <- factor(useData$studie)
+levels(useData$studie) ### udskriver niveauerne for faktoren 'studie'
+levels(useData$studie) <- c("BB", "FE", "HV", "JO", "NR", "ST")
+useData <- filter(useData, !is.na(hojde), !(studie %in% c("FE", "ST")))
+head(useData)
+useData$studie <- droplevels(useData$studie)
+```
+
+# F-test i ensidet ANOVA
+
+Vi tager udgangspunkt i en ensidet ANOVA med højde (`hojde`) som responsvariabel og studieretning (`studie`) som forklarende variabel.
+
+Den relevante hypotese er at test, om gruppegennemsnittet (her: gennemsnitshøjden) er ens for studerende for de 4 studieretninger, som vi kigger på. Som udgangspunkt kan modellen fittes i R med og uden intercept. Det er samme statistiske model, men  - som vi skal se - så er der forskel på, hvilke R kommandoer man efterfølgende kan bruge til at konstruere det korrekte F-test.
+
+## Når modellen fittes i R med referencegruppe / (Intercept)
+
+Her fittes modellen, så R vælger en af grupper (her: BB / biologi-biotek) som reference.
+
+```{r}
+oneway <- lm(hojde ~ studie, data = useData)
+```
+
+Her vises 3 metoder som alle giver det korrekte F-test (F = 5.1745, P = 0.001985) for, om middelværdien af højden er ens for alle 4 studieretninger / grupper.
+
+```{r}
+drop1(oneway, test = "F")
+```
+
+```{r}
+anova(oneway)
+```
+
+Sammenligning med en nulmodel, hvori alle observationer har fælles middelværdi (uanset studieretning / gruppe)
+
+```{r}
+nulmodel <- lm(hojde ~ 1, data = useData)
+anova(nulmodel, oneway)
+```
+
+Bemærk i øvrigt, at R finder ud af det og beregner den korrekte teststørrelse, selvom man skulle komme til at indtaste modellerne i omvendt rækkefølge, når man kalder `anova()`.
+
+```{r}
+anova(oneway, nulmodel)
+```
+
+
+## Når modellen fittes i R uden referencegruppe / (Intercept)
+
+Her fittes modellen, så R tvinges til at give estimater direkte for alle 4 studieretninger / grupper.
+
+```{r}
+oneway_alt <- lm(hojde ~ studie - 1, data = useData)
+```
+
+Her vises 3 metoder som alle giver et forkert F-test. Det test som her udføres (fordi modellen er fittet UDEN intercept) vil være et test for, om den gennemsnitlige højde er lig 0 for alle 4 studieretninger / grupper. Dette test er naturligvis helt uden praktisk interesse.
+
+```{r}
+drop1(oneway_alt, test = "F")
+```
+
+```{r}
+summary(oneway_alt)
+```
+
+```{r}
+anova(oneway_alt)
+```
+
+Man kan dog stadig udføre et test for den relevante hypotese, hvis man tester modellen fittet uden intercept mod en nulmodel, hvori alle observationer har fælles middelværdi (uanset studieretning / gruppe).
+
+```{r}
+anova(nulmodel, oneway_alt)
+```

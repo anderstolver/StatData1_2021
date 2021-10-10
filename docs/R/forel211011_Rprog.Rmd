@@ -1,0 +1,285 @@
+---
+title: 'StatData1: forel211011'
+author: "Anders Tolver"
+output:   
+  html_document:
+    theme: sandstone
+    toc: true
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+***
+
+# Højder af studerende på Statistisk Dataanalyse 1 i 2017
+
+Dette eksempel har været benyttet ved forelæsningen d. 11/10-2021. Formålet med eksemplet er at illustrere
+
+* hvordan man fitter og fortolker resultaterne fra en **tosidet ANOVA uden vekselvirkning**
+
+* hvordan man fitter og fortolker resultaterne fra en **tosidet ANOVA med vekselvirkning**
+
+* hvordan man undersøger om der er vekselvirkning
+    - med et vekselvirkningsplot (i R: `interaction.plot()`)
+    - med et F-test (kun hvis der er gentagelser!)
+    
+## Indlæsning og visualisering af data
+
+Data indlæses og deldatasættet med de fire store studier laves (der er kun svar fra to studerende som ikke går på disse studier).
+
+Der bruges en del R kommandoer nedenfor, som ikke er kernepensum, men nyttige at kunne
+
+* Kommandoen `Sys.setlocale` benyttes til at sikre, at danske bogstaver (æ,ø,å) indlæses korrekt.
+
+* Jeg laver `studie` om til en faktor, og bruger kommandoen `levels` til at give niveauerne af faktoren kortere navne (forkortelser for de forskellige studieretninger)
+
+* Jeg benytter funktionerne `select` og `filter` til at udvælge søjler (variable) og rækker (observationer/datalinjer). Disse funktioner indlæses, når man loader `tidyverse` R pakken. Det er ikke kernepensum, at I har styr på disse funktioner til datamanipulation.
+
+```{r}
+library(readxl)
+Sys.setlocale("LC_ALL", 'en_US.UTF-8')
+data <- read_excel("../data/stud2017-v2.xls")
+useData <- select(data, studie, kon, hojde)
+useData$studie <- factor(useData$studie)
+levels(useData$studie) ### udskriver niveauerne for faktoren 'studie'
+levels(useData$studie) <- c("BB", "FE", "HV", "JO", "NR", "ST")
+useData <- filter(useData, !is.na(hojde), !(studie %in% c("FE", "ST")))
+head(useData)
+```
+
+
+Der optegnes et boxplot over højderne. Bemærk, at R husker at faktoren `studie` faktisk også har niveauer `FE` (Fødevarer og ernæring) og `ST` (statistik), selvom der ikke er nogle observationer fra disse gruppe i det endelige datasæt. Dette kan undgås, ved at bruge R kommendoen `droplevels` til at fortælle R, at der fremadrettet skal ses bort for grupperne `FE` og `ST` når vi benytter den kategoriske variabel `studie`.
+
+```{r fig.show = "hold", out.width = "49%"}
+boxplot(useData$hojde ~ useData$studie, ylab = "Hojde (cm)", xlab = "Studieretning")
+useData$studie <- droplevels(useData$studie)
+boxplot(useData$hojde ~ useData$studie, ylab = "Hojde (cm)", xlab = "Studieretning")
+```
+
+
+***
+
+
+## Ensidet ANOVA
+
+Først fittes en ensidet ANOVA, og vi ser at der er signifikant forskel på højden på de fire studier.
+Men dette kunne meget vel skyldes at kønsfordelingen er forskellig på studierne. Vi vil derfor gerne
+justere/korrigere for køn. Analyseresultaterne fra den ensidede ANOVA er således et eksempel på en *forkert* måde at analysere data på!
+
+```{r}
+oneway <- lm(hojde ~ studie, data = useData)
+drop1(oneway, test = "F")
+```
+
+**Konklusion:** Hypotesen om, at der er samme gennemsnitshøjde for studerende på hver af de 4 studieretninger forkastes (F = 5.1745, p = 0.001985).
+
+## Tosidet ANOVA uden vekselvirkning
+
+Vi ønsker at beskrive den i-te højdemåling ved den statistiske model
+
+$$
+\texttt{hojde}_i = \alpha_{\texttt{studie}(i)} + \beta_{\texttt{kon}(i)} + e_i,
+$$
+hvor $e_1, \ldots, e_{152}$ er iid. normalfordelte med middelværdi $0$ og spredning $\sigma$.
+
+Modellen kaldes den tosidede ANOVA uden vekselvirkning eller den additive model for tosidet ANOVA. Modellen udtrykker, at den forventede værdi er en additiv funktion af noget der afhænger af studieretning og noget der afhængiger af køn. 
+
+**Fortolkningen er vigtig:** forskellen på mænd og kvinders højde antages at være den samme (dvs. uafhængig) af, hvilken studieretning vi betragter. Eller ækvivalent: forskellen mellem gennemsnitshøjden for studerende på to bestemte studier (fx. HV og BB) antages at være den samme for både mænd og kvinder.
+
+
+### Fit af modellen i R og modelkontrol
+
+Vi fitter nu den additive tosidede ANOVA (dvs. uden vekselvirkning) med studieretning og køn.
+
+```{r}
+twoway.add <- lm(hojde ~ studie + kon, data=useData)
+```
+
+Vi udfører modelkontrol af modellen ved at se på
+
+Vi kontrollerer modellens antagelser ved at lave 
+
+* et residualplot af de standardiserede residualer mod de fittede værdier
+
+* et QQ-plot af de standardiserede residualer
+
+```{r fig.show = "hold", out.width = "49%"}
+plot(fitted(twoway.add), rstandard(twoway.add), pch = 16, main = "Tosidet ANOVA uden vekselvirkning", cex.main = 1.5, cex.lab = 1.5)
+abline(h = 0, lty = 2)
+qqnorm(rstandard(twoway.add), pch = 16)
+abline(0, 1, lwd = 2, lty = 2)
+```
+
+Modelkontrol ser fint ud! Øv dig selv på, hvordan man kan udtrykke dette. Søg inspiration i tidligere R programmer, hvor modelkontrol diskuteres mere indgående.
+
+### Fortolkning af estimater
+
+```{r}
+summary(twoway.add)$coefficients
+```
+
+
+Brug tid på at sikre dig, at du forstår, hvordan R vælger at kommunikere resultaterne fra den tosidede ANOVA ud. 
+
+* Bio-biotek og kvinder er brugt som referencegrupper, så interceptestimatet 168.11 er den forventede
+højde for denne gruppe studerende.
+* For mandlige bio-biotek-studerende fås estimatet 168.11 + 14.52 = 182.63.
+* For mandlige JØ-studerende fås estimatet 168.11 + 14.52 - 0.54 = 182.09.
+
+### Test for hovedeffekter
+
+Så testes for effekten af studieretning (se R output længere nede)
+
+*  Når der er korrigeret for køn, fås p-værdien 0.78. Hvis vi tager
+højde for at kønsfordelingen er forskellig på studieretningerne, er der ikke er nogen højdeforskel.
+* Bemærk at testes kan udføres på to måder, vha. drop1 og anova
+
+```{r}
+drop1(twoway.add, test="F")
+oneway.kon <- lm(hojde ~ kon, data=useData)
+anova(oneway.kon, twoway.add)
+```
+
+***
+
+
+## Tosidet ANOVA uden vekselvirkning (uden HV studerende)
+
+Der er slet ingen data fra mænd på husdyrvidenskab (HV). Dette er i virkeligheden ikke noget problem, men modellen med vekselvirkning kommer til at se lidt mærkelig ud, så vi dropper alle fra HV.
+
+På den sidste del af forelæsningsslides til 11/10-2021 regnes på et datasæt, hvor de husdyrvidenskabstuderende er fjernet. Her genfittes den additive model for tosidet ANOVA (dvs. modellen uden vekselvirkning) alene baseret på de resterende data (dvs. uden HV studerende).
+
+```{r}
+useData2 <- filter(useData, !(studie == "HV") )
+useData2$studie <- droplevels(useData2$studie)
+twoway.add2 <- lm(hojde ~ studie + kon, data = useData2)
+summary(twoway.add2)
+```
+
+
+**Fortolkning:** Brug kommentarerne fra efter R kommendoen `summary(twoway.add)$coefficients` i forrige afsnit ovenfor til at sikre dig, at du forstår estimaterne fra modellen `twoway.add2` (lavet uden HV studerende). 
+
+***
+
+
+## Tosidet ANOVA med vekselvirkning
+
+Vi ønsker at beskrive den i-te højdemåling ved den statistiske model
+
+$$
+\texttt{hojde}_i = \gamma_{\texttt{studie}(i),\texttt{kon}(i)} + e_i,
+$$
+hvor $e_1, \ldots, e_{152}$ er iid. normalfordelte med middelværdi $0$ og spredning $\sigma$.
+
+Modellen udtrykker, at den gennemsnitlige/forventede højde afhænger både af køn og studieretning, men der er ikke længere en antagelse om, at de to kategoriske variable skal virke additivt. Mao: vi antager ikke på forhånd, at der skal være samme forskel på gennemsnitshøjden for mænd og kvinder for hver af de 4 studieretninger.
+
+
+### Fit af modellen i R og modelkontrol
+
+Model med vekselvirkning kan fittes ved at tilføje et led med stjerne mellem de to variable.
+
+```{r}
+twoway.int <- lm(hojde ~ studie + kon + studie*kon, data=useData2)
+
+```
+
+
+Vi kontrollerer modellens antagelser ved at lave 
+
+* et residualplot af de standardiserede residualer mod de fittede værdier
+
+* et QQ-plot af de standardiserede residualer
+
+```{r echo = F, fig.show = "hold", out.width = "49%"}
+plot(fitted(twoway.int), rstandard(twoway.int), pch = 16, main = "Tosidet ANOVA med vekselvirkning", cex.main = 1.5, cex.lab = 1.5)
+abline(h = 0, lty = 2)
+qqnorm(rstandard(twoway.int), pch = 16)
+abline(0, 1, lwd = 2, lty = 2)
+```
+
+Modelkontrol ser fint ud!
+
+
+### Fortolkning af estimater
+
+**Bemærk**: der er forskellige måder at fitte samme model i R, og den måde, hvorpå R vælger at angive estimaterne er ikke ens for de forskellige metoder. Det er derfor vigtigt at øve sig på, at kunne fortolke output fra en tosidet ANOVA.
+
+
+```{r}
+summary(twoway.int)
+```
+
+I dette konkrete tilfælde gælder at:
+
+* R vælger BB og kvinder som referencegruppe, så interceptestimatet (167.76) er den estimerede forventede højde for kvinder fra BB-studiet
+
+* For kvinder fra JØ fås 167.7647 + (-0.4570) = 167.31
+* For mænd fra JØ fås 167.7647 + (-0.4570) + 15.6353 + (-0.6489) = 182.29
+
+Øv dig selv på, at kunne udtrække estimaterne for alle 6 kombinationer af studie og køn.
+
+
+### Vekselvirkningsgrafer, test for vekselvirkning
+
+En grafisk undersøgelse af om to faktorer / kategoriske variable virker additivt eller om der er vekselvirkning kan laves ved brug af kommandoen `interaction.plot`.
+
+```{r out.width = "49%", fig.show = "hold"}
+interaction.plot(useData2$studie, useData2$kon, useData2$hojde, type="b", pch=16, ylab = "Mean of hojde (cm)")
+interaction.plot(useData2$kon, useData2$studie, useData2$hojde, type="b", pch=16, ylab = "Mean of hojde (cm)")
+```
+
+**Konklusion:** Profilerne i vekselvirkningsgraferne ser ganske parallelle ud, så plottene tyder umiddelbatrt på at der ikke er vekselvirkning mellem studie og køn i deres beskrivelse af højden
+
+Et formelt test af, om der er vekselvirkning mellem køn og studie kan foretages ved at lave et F-test, hvor man sammenligner
+
+* *fuld model*: tosidet ANOVA **med** vekselvirkning
+* *nulmodel*: tosidet ANOVA **uden** vekselvirkning
+
+F-testet kan udføres ved brug af `anova()`.
+
+```{r}
+anova(twoway.add2, twoway.int)
+```
+
+Fordi modellen `twoway.int` er fittet i R med syntaksen `lm(hojde ~ studie + kon + studie*kon, data=useData2)` så kan vi også bruge `drop1()` til at undersøg, om det er rimeligt at *droppe* (dvs. se bort fra) leddet `studie*kon`, der repræsenterer en vekselvirkning.
+
+```{r}
+drop1(twoway.int, test="F")
+```
+
+**Konklusion**: Begge de to metoder giver en F-teststørrelse på 0.5388 med en tilhørende p-værdi på 0.5851. Vi godkender altså nulhypotesen (nulmodellen) som udtrykker, at der *ikke* er vekselvrining mellem køn og studie.
+
+
+
+### Test for hovedeffekter, konklusion på analysen
+
+Som ovenfor laver vi (her ved brug af `drop1`) test for de to hovedeffekter med udgangspunkt i den additive model for tosidet ANOVA.
+
+```{r}
+drop1(twoway.add2, test = "F")
+```
+
+
+* Der er ikke signifikant forskel på studieretningerne når der korrigeres for køn (p=0.88)
+* Der er signifikant forskel på kønnene, p<2e-16 (dvs. p=0)
+
+
+Kigger vi på estimaterne fra modellen (`twoway.add2`) ...
+
+```{r}
+summary(twoway.add2)
+confint(twoway.add2)
+```
+
+... så kan vi bl.a. se at kønsforskellen estimeres til 14.51 cm (SE 1.26 cm) med 95% KI (12.03 , 17.01).
+
+Den ambitiøse studerende kan selv repetere beregningen af konfidensintervallet ud fra
+
+* estimatet for forskellen: 14.523
+* standard error for estimerede forskel: 1.259
+* antal frihedsgrader: n - k = 110 - 4 = 106
+
