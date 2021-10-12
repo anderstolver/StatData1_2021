@@ -1,0 +1,333 @@
+---
+title: 'StatData1: forel211013'
+author: "Anders Tolver"
+output:   
+  html_document:
+    theme: sandstone
+    toc: true
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+
+***
+
+# Løbetider på DHL-stafetten
+
+Dette eksempel har været benyttet ved forelæsningen i Statistisk Dataanalyse 1 d. 13/10-2021.  Formålet med eksemplet er at vise
+
+* en statistisk analyse med en *blandet model* der indeholder både kontinuerte og kategoriske forklarende variable.
+
+Lidt mere baggrund om datasættet.
+
+* Data stammer fra DHL-stafetten i 2006. DHL-stafetten strakte sig det år over fire dage (mandag-torsdag).
+Hver dag løber 5000 hold. Hvert hold består af fem personer der er frit sammensat af mænd
+og kvinder. Hver person løber 5 km, så den samlede distance for hvert hold er 25 km.
+* For hver dag (mandag-torsdag) og hver sammensætning (0-5 kvinder, seks slags/grupper) har man fundet samtlige
+holds resultat (løbstid) og bestemt medianen, og det er disse medianer der er angivet i datasættet.
+* Datasættet består af følgende variable: `day`, `men` og `women` (antal mænd og kvinder, summerer til fem),
+`hours` og `minutes` og `seconds` (der tilsammen giver resultatet).
+
+## Indlæsning og visualisering af data
+
+* Datasættet ligger under navnet `dhl` i R pakken `isdals`.
+* Vi laver en ny variabel, `time` som er holdets tid i sekunder.
+* De første linjer i  datasættet (inkl. den nye variable) er vist nedenfor, og data er illustreret i de to figurer.
+
+```{r}
+library(isdals)
+data(dhl)
+dhl <- transform(dhl, time = 60*60*hours + 60*minutes + seconds)
+dhl <- transform(dhl, group = factor(women))
+head(dhl)
+```
+
+```{r fig.show = "hold", out.width = "49%"}
+plot(time ~ women, data=dhl, pch=16, col=day, ylab="Resultat (sek)", xlab="Antal kvinder")
+legend("topleft", c("Monday", "Tuesday", "Wednesday", "Thursday"), col=c(1,3,4,2), pch=16)
+interaction.plot(dhl$women, dhl$day, dhl$time, pch=16, type="b", col=dhl$day, ylab="Resultat (sek)", xlab="Antal kvinder")
+```
+
+## Modelovervejelser og fit af model
+
+* Variablen `time` (median løbetid i sekunder) er vores respons
+
+* Variablen `day` er oplagt en kategorisk variabel. 
+
+* Variablen `women` kan bruges både som kvantitativ og kategorisk variabel. Hvis vi bruger den som kvantitativ variabel, 
+antager vi at løbstiden vokser lineært med antal kvinder. Dette virker - både udfra graferne og fra en "teorerisk" synspunkt som en helt rimelig antagelse. 
+
+* Det virker umiddelbart rimeligt at antage de de rette linjer hørende til de forskellige dage er parallelle såldes at vi skal bruge den additive model. Ikke-parellelle linjer ville svare til at effekten af at have flere kvinder med på holdet var forskellig for forskellige dage, hvilket ikke umiddelbart virker logisk.
+
+* Ovenstående overvejelser gør at vores forslag til model er modellen med fire parallelle regressionslinier (en per dag). Det svarer til at profilerne i figuren ovenfor til højre er tilfældige udsving om fire parallelle linier. Det ser ikke urimeligt ud, men vi skal selvfølgelig kontrollere modellen som sædvanlig.
+
+Den statistiske model kan udtrykkes ved at (medianen for) DHL-løbetiderne beskrives som
+
+$$
+\texttt{time}_i =  \alpha_{\texttt{day}(i)} + \beta \cdot \texttt{woman}_i + e_i,
+$$
+
+hvor $e_1, \ldots, e_{20}$ antages at være uafhængige og normalfordelte $N(0, \sigma^2)$. Fortolkningen af parametrene i modellen er:
+
+* $\alpha_{\texttt{mandag}}$: (median)løbetid blandt alle hold med 0 kvinder, som løb om mandagen
+
+* ...
+
+* $\alpha_{\texttt{torsdag}}$: (median)løbetid blandt alle hold med 0 kvinder, som løb om torsdagen
+
+* $\beta$: den forventede forøgelse af (median)løbetiden hvis man forøger antallet af kvinder på holdet med 1
+
+* $\sigma$: er residual spredningen (beskriver afvigelser mellem punkter på figuren og de rette linjer der estimeres når modellen fittes i R)
+
+Modellen kan fittes R med følgende kode ...
+
+```{r}
+model1 <- lm(time ~ day + women, data=dhl)
+```
+
+## Modelkontrol
+
+Modellen med fire parallelle regressionslinier er fittet ovenfor (`model1`), og der er lavet modelkontroltegninger. 
+
+```{r fig.show = "hold", out.width = "49%"}
+plot(fitted(model1), rstandard(model1))
+abline(h=0, lty=2)
+qqnorm(rstandard(model1))
+abline(0,1, lty=2)
+```
+
+Det ser ganske fornuftigt ud, selvom der er et par residualer som ligger lidt yderligt.
+
+## Test og estimater
+
+Vi benytter først `drop1()` til at undersøge, om ugedag (`day`) og antallet af kvinder på holder (`women`) har en indflydelse på holdenes løbetid. Det svarer til at teste hypoteserne
+
+* $\beta = 0$: antal af kvinder påvirker ikke holdets løbetid
+* $\alpha_{\texttt{mandag}}=\alpha_{\texttt{tirsdag}}=\alpha_{\texttt{onsdag}}=\alpha_{\texttt{torsdag}}$: der er samme løbetider på de forskellige dage (for hold med samme antal kvinder)
+
+```{r}
+drop1(model1, test="F")
+```
+
+**Konklusion:** Både ugedag og antal kvinder er stærkt signifikante (p=1.3e-05 hhv. 5.4e-16). Vi har altså påvist at kvinder og mænd ikke løber lige hurtigt (næppe overraskende) og at der er forskel på dagene (måske mere overraskende, se dog supplerende analyser nedenfor).
+
+Vi kigger dernæst nærmere på estimaterne fra den fittede model (`model1`)
+
+```{r}
+summary(model1)$coefficients
+confint(model1)
+```
+
+**Fortolkning af estimaterne:** På baggrund af estimater og konfidensintervaller kan vi konkludere at
+
+* Den fittede regressionslinie for mandag (=reference gruppe) er $time = 7818.9 + 242.2\cdot k$ hvor $k$ er antallet af kvinder på holdet. For de øvrige dage skal intercept justeres.
+
+* Den forventede værdi for hold bestående kun af mænd er altså 7818.9 sek = 130.3 minutter om mandagen. Dette er for helt hold svarende til 25 km, så det giver en kilometertid (pace) på 5.21 min. For hold kun med kvinder fås tilsvarende estimatet $7818.9 + 242.2\cdot 5 = 9029.9$ sek eller 150.5 minutter for hele holdet svarende til 6.0 min per km. 
+
+* Hvis vi lavede den samme øvelse for en af de andre dage, ville vi ikke få de samme kilometertider, men vi ville få den samme forskel mellem mænd og kvinder! Det er fordi vi har antaget at linierne er parallelle. Prøv fx. selv at bestemme løbetiden for hold med 0 hhv. 5 kvinder for en anden ugedag, og udregn så forskellen på disse løbetider.
+
+* Vi kan sige det med forskellen mellem mænd og kvinder mere elegant: For hvert ekstra kvinde på holdet forlænges løbstiden med 242.236 sek = 4 min (uanset dag) [95 % konfidensinterval: 221.947-262.524 sek]. Den ekstra kvinde løber 5 km, så det svarer til en kilometertid på 0.8 minutter højere for kvinder end mænd. Det tilhørende konfidensinterval er (0.74 , 0.88).
+
+* Der er ikke signifikant forskel mellem mandag og tirsdag (p=0.74), men de forventede løbstider er kortere onsdag og torsdag (p=0.0003 for onsdag og p=0.00004 for torsdag). Faktisk var vejret rædselsfuldt mandag og tirsdag, og ruten blev lagt om mellem tirsdag og onsdag. Det er måske alligevel ikke så mærkeligt at der er forskel på dagene.
+
+### Samme model men nu fittet uden intercept
+
+```{r}
+model1alt <- lm(time ~ day + women - 1, data=dhl)
+summary(model1alt)$coefficients
+```
+**Fortolkning af estimaterne:** Hvis vi fitter modellen uden intercept (`model1alt` ovenfor), så kan vi umiddelbart aflæse `skæringen` for linjerne hørende til hver af de 4 ugedage
+
+* Fx. ses direkte at den fittede regressionslinje for onsdag er $time = 7613.7 + 242.2\cdot k$ hvor $k$ er antallet af kvinder på holdet.
+
+## Supplerende analyser
+
+### Samme løbetider mandag/tirsdag (hhv. onsdag/torsdag)?
+
+Mere om forskellen mellem dage:
+
+* Ovenfor rapporterede vi nogle resultater vedr. dagene. Man kunne også lave _et enkelt test_ for dobbelthypotesen om at der ingen forskel er på mandag og torsdag og at der ingen forskel er på onsdag og torsdag. 
+
+* Dette kan undersøges ved at lave en ny variabel der inddeler observationerne i kun to grupper og bruge den i stedet for `day`. De to modeller er nestede, så vi kan sammenligne dem med et F-test. Dette giver p=0.62, så det tyder på at resultaterne er ens mandag og tirsdag, og ens onsdag og torsdag. 
+
+* Rent praktisk: vi fitter en *fuld model* (`model1` fra før) der tillader løbetiderne at være forskellige for alle fire ugedage, og en *nulmodel* (`model2` nedenfor) hvor vi restringerer løbetiderne til kun af afhænge af, hvilken af grupperne mandag/tirsdag eller onsdag/torsdag målingen stammer fra.
+
+
+```{r}
+# Ny variabel med ma+ti hhv on+to
+dhl <- transform(dhl, day1 = ifelse (day %in% c("Monday","Tuesday"), "MoTu", "WeTh"))
+model2 <- lm(time ~ day1 + women, data=dhl)
+anova(model2, model1)
+summary(model2)$coefficients
+```
+
+**Konklusion:** Ud over p-værdien for test af hypotesen givet ved nulmodellen, så fås desuden et enkelt estimat for forskellen mellem de to ruter: Ruten der blev benyttet onsdag og torsdag er 234.8 sekunder hurtigere (for 25 km) end ruten der blev løbet mandag og tirsdag. 
+
+
+### Kan løbetiderne beskrives ved parellelle linjer?
+
+I `model1` antages de fire regressionslinjer at være parallelle. Vi kan godt fitte en model, hvor både skæringer og hældninger er forskellige (ikke-parallelle linjer). Modellen med parallelle linjer er en sub-model/delmodel af modellen med ikke-parallelle linjer. Modellen med parallelle linjer svarende til hypotesen om at hældningerne er ens. 
+
+Modellen hvor regressionslinjernes hældning tillades at afhænge af/variere mellem ugedage kan fittes i R ved at tilføje et led af formen `day * women`. Dette kan fortolkes som en vekselvirkning mellem en kontinuert forklarende variabel (her: `women`) og en kategorisk forklarende variabel (her:  `day`). Når man tilføjer leddet `women` til modellen, så inkluderes en lineær effekt/sammenhæng mellem antal kvinder og løbetiden. Når man yderligere tilføjer vekselvirkningen, så tillader vi at *effekten*, af at tilføje en kvinde til holdet, kan afhænge af/interagere med hvilken ugedag, vi betragter.
+
+
+```{r}
+# Ikke-parallelle linier
+ikkeParallel <- lm(time ~ day + women + day * women, data=dhl)
+anova(model1, ikkeParallel)
+```
+
+**Konklusion på test:** Hypotesen accepteres med en p-værdi på 0.88. Der er således ikke tegn på at forskellen mellem mænd og kvinder (som jo er beskrevet ved hældningerne) er forskellig fra dag til dag.
+
+### Afhænger løbetiderne overhovedet lineært af antallet af kvinder på holdet?
+
+I `model1` antages det desuden at der er lineær sammenhæng mellem antal kvinder på holdet og løbstiden. Hvis vi  bruger `woman` som kategorisk variabel, gør vi ikke denne antagelse. Vi kan altså fitte den additive tosidede ANOVA med `factor(woman)` og `day` som forklarende variable. Den additive model udtrykker blot, at forskellen mellem løbetiderne på de forskellige dage er den samme, uanset om vi betragter holdene med 0, 1, ... eller 5 kvinder på holdet.
+
+Regressionsmodellen (`model1` med de parellelle linjer) er en sub-model af den additve tosidede ANOVA (de to modeller er nestede), så vi kan sammenligne de to modeller (med et F-test) og derved udføre et test for linearitet. 
+
+```{r}
+# Tosidet ANOVA uden vekselvirkning
+tosidet <- lm(time ~ day + factor(women), data=dhl)
+anova(model1, tosidet)
+```
+
+p-værdien bliver 0.07, så vi accepterer hypotesen. Der er ikke umiddelbart tegn på ikke-linearitet.
+
+**Bemærk:** at vi _ikke_ kan lave en tosidet ANOVA _med_ vekselvirkning fordi der kun er en observation per kombination af dag og gruppe (ingen gentagelser).
+
+
+
+# Lungefunktion (selvstudie + video)
+
+Dette eksempel hører naturligt til forelæsningen i Statistisk Dataanalyse 1 d. 13/10-2021. Jeg tvivler dog på, at jeg når at gennemgå dette eksempel ved forelæsningen, så jeg henviser til den video, hvor jeg gennemgår eksemplet. Eksempel og data er yderligere beskrevet i Eksempel fra Case 7 på side 440 i lærebogen. Formålet med eksemplet er at illustrere
+
+* statistisk analyse med en *blandet model* der indeholder både kontinuerte og kategoriske forklarende variable.
+
+
+## Indlæsning og visualisering af data
+
+Datasættet `fev` ligger i `isdals` R pakken. Der er målinger fra 643 børn og datasættet indeholder følgende variable
+
+* `FEV`: Lungefunktionsmåling
+* `Age` og `Gender` (selvforklarende), `Smoke` (om der ryges i hjemmet), `Ht` (højde i tommer).
+* `Gender` og `Smoke` er begge kodet som kvantitative variable med værdierne 0 og 1. Vi laver dem om til
+kategoriske variable (faktorer).
+
+```{r}
+library(isdals)
+data(fev)
+fev <- transform(fev, GenderFac = factor(Gender, labels = c("Piger", "Drenge")), SmokeFac = factor(Smoke, labels = c("Ingen-rygning", "Rygning")))
+head(fev)
+```
+
+Det er svært at sige noget generelt om sammenhængen ml. `Gender` og/eller `Smoke` og lungefunktion (`FEV`) på baggrund af nedenståede scatterplot (NB: de to øverste og de to nederste figurer viser præcis det samme - kun R koden er forskellig!)
+
+```{r fig.show = "hold", out.width = "49%"}
+plot(fev$Age, fev$FEV, col = fev$SmokeFac, xlab = "Age (years)", ylab = "Lungefunktion, FEV", pch = fev$Gender + 1)
+ggplot(data = fev) + geom_point(aes(x = Age, y = FEV, shape = GenderFac, color = SmokeFac)) +
+  labs(x = "Age (years)", y = "Lungefunktion, FEV") + theme_bw()
+plot(fev$Ht, fev$FEV, col = fev$SmokeFac, xlab = "Height (tommer)", ylab = "Lungefunktion, FEV", pch = fev$Gender + 1)
+ggplot(data = fev) + geom_point(aes(x = Ht, y = FEV, shape = GenderFac, color = SmokeFac)) +
+  labs(x = "Height (tommer)", y = "Lungefunktion, FEV") + theme_bw()
+```
+
+## Fit af model i R og modelkontrol
+
+Lægerne har gjort sig følgende overvejelser:
+
+* Det er tænkeligt at rygning i hjemmet påvirker FEV forskellige for drenge og piger. Vi indrrager derfor
+vekselvirkning mellem køn og rygning.
+* Man mener at FEV vokser med alderen, men at denne vækst muligvis aftager med alderen. Vi indrager
+derfor alder både lienært og kvadratisk.
+* Man mener at barnets størrelsee kan have en effekt på FEV, også selvom man tager alder i betragtning.
+Vi inddrager derfor højde i modellen.
+
+Vi anvender en statistisk model, hvor lungemålingen $\texttt{FEV}_i$ for de $i$-te barn er givet ved
+$$
+\texttt{FEV}_i = \gamma_{\texttt{Gender}(i), \texttt{Smoke}(i)} + \alpha \cdot \texttt{Ht}_i + \beta \cdot \texttt{Age}_i + \delta \cdot \texttt{Age}_i^2 + e_i,
+$$
+hvor $e_1,\ldots, e_{643}$ er iid. normalfordelte med middelværdi 0 og spredning $\sigma$.
+
+Vi fitter først en model med FEV som respons (`mod1`). Denne model har store problemer med antagelsen om varianshomogenitet (variansen er størst for store prædikterede værdier). Vi fitter derefter den tilsvarende model med log(FEV) som respons (`mod2`). 
+
+```{r}
+mod1 <- lm(FEV ~ Age + I(Age^2) + Ht + GenderFac + SmokeFac + SmokeFac*GenderFac, data=fev)
+mod2 <- lm(log(FEV) ~ Age + I(Age^2) + Ht + GenderFac + SmokeFac + SmokeFac*GenderFac, data=fev)
+```
+
+På baggrund af residualplottet foretrækkes modellen, hvor $\log(\texttt{FEV})$ benyttes som respons. Check selv QQ-plottet.
+
+```{r fig.show = "hold", out.width = "49%"}
+plot(fitted(mod1), rstandard(mod1), main = "FEV som respons")
+abline(h=0, lty=2)
+plot(fitted(mod2), rstandard(mod2), main = "log(FEV) som respons")
+abline(h=0, lty=2)
+```
+
+Vi fortsætter derfor analysen med udgangspunkt i modellen `mod2`. Atter engang viser det sig altså at man bør logtransformere data!
+
+## Fortolkning af estimater
+
+Vi kigger nu på estimaterne fra modellen `mod2`
+
+```{r}
+summary(mod2)$coefficients
+```
+
+**Konklusioner:** Vi aflæser umiddelbart følgende fra tabellen over estimaterne.
+
+* Vi estimerer først effekten på FEV af rygning i hjemmet for hvert køn for sig.
+* Referencegruppen er piger (`Gender = 0`), så effekten for piger kan aflæses direkte i summary for modellen `mod2`:
+Estimatet er -0.0515 (SE 0.0263). Effekten er ikke signifikant (p=0.051).
+* For drenge er estimatet -0.0515 + 0.0181 = -0.033. SE findes nemmest ved at fitte modellen igen, denne
+gang med drenge som referencegruppe (se output for `mod2A` nedenfor). Vi genfinder estimatet, og får desuden SE 0.0315. Effekten er
+ikke signifikant (p=0.29)
+* Bemærk at forskellen mellem drenge og piger i effekt af rygning er 0.0181 hvilket ikke er signifikant (p=0.64). Der er
+således ikke signifikant vekselvirkning mellem køn og rygning.
+
+**Samme model, men nu med drenge (`Gender = 1`) som reference:**
+
+```{r}
+fev <- transform(fev, GenderFac2 = relevel(GenderFac, ref="Drenge"))
+mod2A <- lm(log(FEV) ~ Age + I(Age^2) + Ht + GenderFac2 + SmokeFac + SmokeFac*GenderFac2, data=fev)
+summary(mod2A)$coefficients
+```
+
+## Model uden vekselvirkning mellem `Gender` og `Smoking`
+
+Vi kan finde et fælles/samlet estimat for effekten af rygning for drenge og piger ved at fitte modellen ovenfor uden vekselvirkning (som jo
+heller ikke viste sig at være signifikant).
+
+Modellen fittes med følgende R kode ...
+
+```{r}
+mod3 <- lm(log(FEV) ~ Age + I(Age^2) + Ht + GenderFac + SmokeFac, data=fev)
+```
+
+Modellen (`mod3`) repræsenterer en delmodel (dvs. en restriktion af parametrene) fra den fulde model `mod2`. Vi kan således sammenligne de to modeller ved et F-test.
+
+```{r}
+anova(mod3, mod2)
+```
+
+**Bemærk:** Selvom vi her laver testet som et F-test, så er det faktisk ækvivalent med t-testet, som vi kommenterede på i forrige afsnit. Her så vi også en p-værdi på 0.64 for et test af hypotesen om, at der ikke er vekselvirkning ml. `Gender` og `Smoke`.
+
+Vi kigger nærmere på estimaterne fra modellen (`mod3`) uden vekselvirkning.
+
+```{r}
+summary(mod3)$coefficients
+confint(mod3)
+```
+
+**Fortolkning:** Vi udtrækker følgende fra outputted fra `mod3`
+
+* Den gennemsnitlige effekt af rygning (samlet for Drenge/Piger) estimeres til -0.0442 (SE 0.0212). Effekten er lige netop signifikant (p=0.037). 95% KI er (-0.0858
+,-0.00265). Vi estimerer altså at forventet FEV falder med 0.0442 når der ryges i hjemmet.
+* Ovenstående estimater er på log-skala. På den oprindelige skala svarer estimatet til at FEV i hjem hvor der ryges er en faktor exp(0.0422)=0.957 af FEV i hjem hvor der ikke ryges. Altså at rygning i hjemmet reducerer
+FEV med 4%. Det tilsvarende 95% KI er (0.26% , 8.22%)
+* Bemærk at effekten på FEV af rygning i hjemmet hverken var statistisk signifikant for drenge eller
+piger, men er statistisksignifikant når kønnene slås sammen. Det skyldes at estimaterne vendte i samme retning for begge køn, således at der er mere evidens for en effekt når begge køn betragtes (større stikprøve)!

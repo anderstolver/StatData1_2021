@@ -99,8 +99,6 @@ Vi fitter nu den additive tosidede ANOVA (dvs. uden vekselvirkning) med studiere
 twoway.add <- lm(hojde ~ studie + kon, data=useData)
 ```
 
-Vi udfører modelkontrol af modellen ved at se på
-
 Vi kontrollerer modellens antagelser ved at lave 
 
 * et residualplot af de standardiserede residualer mod de fittede værdier

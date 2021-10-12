@@ -283,7 +283,6 @@ drop1(oneway, test = &quot;F&quot;)</code></pre>
 <h3>Fit af modellen i R og modelkontrol</h3>
 <p>Vi fitter nu den additive tosidede ANOVA (dvs. uden vekselvirkning) med studieretning og køn.</p>
 <pre class="r"><code>twoway.add &lt;- lm(hojde ~ studie + kon, data=useData)</code></pre>
-<p>Vi udfører modelkontrol af modellen ved at se på</p>
 <p>Vi kontrollerer modellens antagelser ved at lave</p>
 <ul>
 <li><p>et residualplot af de standardiserede residualer mod de fittede værdier</p></li>
