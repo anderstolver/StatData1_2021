@@ -1,0 +1,18 @@
+side forskel
+venstre    -9.5
+højre    11.5
+venstre   -12.5
+venstre   -10.5
+venstre    -9.5
+ højre     9.5
+venstre    -9.5
+neutral     0.5
+neutral    -0.5
+neutral    -1.5
+neutral    -0.5
+neutral     2.5
+neutral     1.5
+neutral     0.5
+neutral     1.5
+neutral     1.5
+neutral     0.5

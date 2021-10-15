@@ -1,0 +1,20 @@
+frekvens farve
+  25.7  blaa
+  27.2  blaa
+  29.9  blaa
+  28.5  blaa
+  29.4  blaa
+  28.3  blaa
+  26.8  brun
+  27.9  brun
+  23.7  brun
+  25.0  brun
+  26.3  brun
+  24.8  brun
+  25.7  brun
+  24.5  brun
+  26.4 groen
+  24.2 groen
+  28.0 groen
+  26.9 groen
+  29.1 groen
