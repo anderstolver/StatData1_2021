@@ -1,0 +1,204 @@
+---
+title: 'StatData1: forel211025'
+author: "Anders Tolver"
+output:   
+  html_document:
+    theme: sandstone
+    toc: true
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+
+***
+
+# Spiring af frø
+
+Beregningerne nedenfor er motiveret af Example 11.2 i lærebogen. Vi antager således, at spiringssandsynligheden er ens for alle frø, og at udfaldet af den binære variabel (spiring / ikke-spiring) er uafhængig af hinanden for de forskellige frø. Denne model kaldes i bogens Kapitel 11.1 for *The independent trials model*.
+
+Antallet af frø som spirer (ud af n frø totalt) vil da kunne skrives ved en binomialfordeling med parametre (n,p), hvor p betegner sandsynligheden for, at et tilfældigt valgt frø spirer.
+
+## Sandsynligheder fra bin(3,0.6)
+
+Først diverse sandsynligheder fra binomialfordelingen med n=3 og p=0.6, dvs. bin(3,0,6). Tænk her på Y som en variabel der tæller, hvor mange ud af de n=3 frø som spirer. Det mulige værdier for Y er altså 0, 1, 2, 3.
+
+```{r}
+dbinom(1, size=3, prob=0.6)    ## P(Y=1)
+dbinom(0, size=3, prob=0.6)    ## P(Y=0)
+1-dbinom(0, size=3, prob=0.6)  ## P(Y>= 1)
+pbinom(2, size=3, prob=0.6)    ## P(Y<= 2)
+```
+
+## Sandsynligheder fra bin(8,0.6)
+
+Hvis n=8, så vi i stedet ser på bin(8,0.6) får vi i stedet følgende:
+
+```{r}
+dbinom(1, size=8, prob=0.6)    ## P(Y=1)
+1-dbinom(0, size=8, prob=0.6)  ## P(Y>= 1)
+pbinom(2, size=8, prob=0.6)    ## P(Y<= 2)
+```
+
+## Bestemmelse af stikprøvestørrelse
+
+Så til situationen hvor vi skal bestemme antal frø, $n$, så der med sandsynlighed 90% er mindst 10 frø der spirer:
+
+* Antag at $Y \sim \text{bin}(n,0.6)$. 
+
+* Ønsker at bestemme $n$ så $P(Y \geq 10) \geq 0.90$, eller så $P(Y \leq 9) \leq 0.10$. Den sidste sandsynlighed kan bestemmes vha _pbinom_
+
+* Prøver først $n=10$. Her er $P(Y \leq 4) = 0.17$, altså for stor så $n$ skal være større
+
+* Vi prøver os lidt frem og finder ud af at $P(Y \leq 9) = 0.128$ hvis $n=20$ og $P(Y \leq 9) = 0.085$ hvis $n=21$. Vi skal altså bruge 21 frø i hver potte for at opnå det ønskede.
+
+```{r}
+pbinom(9, size=15, prob=0.6)
+pbinom(9, size=25, prob=0.6)
+pbinom(9, size=20, prob=0.6)
+pbinom(9, size=21, prob=0.6)
+```
+
+# StatData1-studerendes forventninger omkring forelæserens fritidsinteresser
+
+Ved forelæsningen d. 8/9-2021 blev de studerende på Statistisk Dataanalyse 1 bedt om at gætte på, hvad forelæseren kan lide at lave i sin fritid. Der kunne *hakkes* af ved flere ting, og svarmulighederne var følgende
+
+* Renovere sin bolig
+* Hækle
+* Klatre i træer
+* Plukke kantareller
+* Køre på rulleski
+* Se fodboldkampe med Liverpool i TV
+
+Der ver 179 studerende, som besvarede spørgsmålet. Svarene kan ses på slide 22 fra dagens forelæsning. Formålet med spørgsmålet var faktisk ikke at se, om de studerende kunne gætte rigtigt: I havde jo ingen relevant information til rådighed for at lave et kvalificeret gæt! Formålet var snarere at afdække typiske forventninger til, hvad en forelæser i statistik egentlig kan lide at lave. Tænk derfor på formålet, som et forsøg på at afdække/beskrive forskelle i andelen af personer, som tror på, at en given aktivitet er en naturlig fritidsinteresse for en forelæser i statistik.
+
+Vi interesserer os nedenfor for den andel / procentdel, som finder det naturligt, at forelæseren kan lide at plukke kantareller i sin fritid. Baseret på en stikprøve på 179 svar, var der 98 som markerede *Plukke kantareller* som en naturlig fritidsaktivitet.
+
+Vi lader $Y$ betegne antallet af studerene, som markerede ved *Plukke kantareller* og benytter den statistiske model, hvor $Y \sim bin(179, p)$ hvor parameteren p der beskriver *successandsynligheden* (i hver *trial*) opfattes som ukendt.
+
+## Estimat og simpelt KI 
+
+Vi laver beregningerne manuelt (baseret på s. 316-317 i+ Ex. 11.7 i lærebogen) og får $\hat p=0.547$ og 95% konfidensinterval (0.475, 0.620).
+
+```{r}
+p <- 98/179
+p
+SE <- sqrt(p * (1-p) / 179)
+SE
+p - 1.96 * SE 
+p + 1.96 * SE
+```
+
+## Forbedret KI (skubbet mod 0.5)
+
+Vi beregner først det forbedrede KI manuelt (lærebogens kapitel 11.3.1) og får (0.474, 0.619).
+
+```{r}
+p1tilde <- (98+2)/(179+4)
+p1tilde - 1.96 * sqrt(p1tilde * (1-p1tilde) / 183)
+p1tilde + 1.96 * sqrt(p1tilde * (1-p1tilde) / 183)
+```
+
+Derefter bruger vi `prop.test` og får (0.474, 0.619).
+
+Bemærk: 
+
+* De to metoder giver ikke præcis det samme, fordi den approksimation der benyttes af `prop.test` er lidt anderledes. Men forskellene er forsvindende små (længere ude end på 3. decimal) i dette tilfælde. Begge dele er fornuftigt nok, og I kan gøre det I foretrækker. 
+
+* Bemærk at `prop.test` også giver en p-værdi. Hvis man (som her) ikke angiver en hypoteseværdi, så testes hypotesen $H_0: p=0.5$. Mere om dette senere i R programmet
+
+```{r}
+prop.test(98, 179, correct=FALSE)
+```
+
+## Test af hypotese 
+
+* Ved besvarelsen af spørgsmålet blev de studerende forelagt 6 eksempler på fritidsaktiviteter, som man kunne vælge imellem. Hvis I på forhånd havde fået oplyst, at 3 af mulighederne var korrekte, så kunne vi undersøge et hypotese om, at I blot havde gættet på svaret (og dermed ikke havde en bias mod nogle af mulighederne). Dette ville svare til, at  p=3/6 = 1/2. Vi tester derfor hypotesen $H_0: p=1/2$
+
+* Vi benytter observationen 98 selv som teststørrelse og summerer alle de punktsandsynligheder der er $\leq P(Y=98)$ 
+Dette er præcis det som `binom.test` gør (men man kan også gøres manuelt).
+
+* Bemærk at `binom.test` også giver et konfidensinterval for $p$ - og at det ikke er identisk med nogle af dem vi så ovenfor. 
+
+ 
+```{r}
+binom.test(98, 179, p=1/2)
+```
+
+* Vi kan også få`prop.test` til at give en p-værdi for hypotesen - men det ikke er den samme som den `binom.test` giver. `prop.test` benytter en anden teststørrelse, nemlig en baseret på forskellen mellem forventet værdi under hypotesen og observeret værdi. Det ser vi lidt nærmere på onsdag i andre situationer.
+
+
+```{r}
+prop.test(98, 179, correct=FALSE, p=1/2)
+```
+
+# Kastrering (af mus) og diabetes
+
+## Beskrivelse af data
+
+Eksemplet er diskuteret på slides til forelæsningen d. 25/10-2021 på Statistisk Dataanalyse 1
+
+* Vi betragter data fra 100 mus, som blev tilfældigt inddelt i to lige store grupper. 
+* Den ene gruppe mus blev kastreret dagen efter fødsel; den anden gruppe mus blev ikke kastreret
+* Efter 112 dage undersøgte man om musene havde udviklet diabetes
+
+## Antagelser / model
+
+Vi lader 
+
+* Y være antallet af kastrerede mus, som udvikler diabetes
+* X være antallet af ikke-kastrerede mus, som udvikler diabetes
+
+Vi antager at
+
+* Y er bin(50, p), hvor p er (den ukendte) sandsynlighed for at en tilfældigt valgt kastreret mus udvikler diabetes
+* X er bin(50, q), hvor q er (den ukendte) sandsynlighed for at en tilfældigt valgt ikke-kastreret mus udvikler diabetes
+
+Vi interesserer os for
+
+* estimat og konfidensinterval for forskellen p - q
+* test for hypotesen $H_0: p = q$
+
+Vi observerer
+
+* Y = 26 (diabetes-ramte mus blandt de 50 kastrerede mus)
+* X = 12 (diabetes-ramte mus blandt de 50 ikke-kastrerede mus)
+
+## Manuel beregning af SE for forskel:
+
+Formlerne findes på s. 321-322 i lærebogens kapitel 11.4.
+
+```{r}
+p <- 26/50
+SE.p <- sqrt(p*(1-p)/50)
+SE.p
+
+q <- 12/50
+SE.q <- sqrt(q*(1-q)/50)
+SE.q
+
+SE.forskel <- sqrt(SE.p^2 + SE.q^2)
+SE.forskel
+
+p-q
+p-q - 1.96 * SE.forskel
+p-q + 1.96 * SE.forskel
+```
+
+**Konklusion:** Forskellen (p-q) estimeres til 0.28. Standard error på estimatet for forskellen estimeres til 0.093. Et 95 % - konfidensinterval for forskellen er (0.098,0.462).
+
+## Med `prop.test`
+
+Konfidensintervallet for forskellen kan også beregnes i R med `prop.test`. Vær opmærksom på, hvordan data skal indtastes
+
+* `c(26, 12)`: angiver antallet af *cases* (dvs. diabetes-ramte mus) i de to grupper
+* `c(50, 50)`: angiver de totale antal mus i de to grupper
+
+```{r}
+prop.test(c(26,12), c(50,50), correct=FALSE)
+```
+
+**Konklusion:** Vi genfinder konfidensintervallet (0.098,0.462) som vi beregnede i håndkraft (via formlerne) ovenfor. Konfindensintervallet indeholder *ikke* tallet 0, så vi kan konkludere, at p-værdien for test af hypotesen om at p-q = 0 er mindre end 5 %. Bemærk dog, at `prop.test` rent faktisk også beregner en p-værdi (som angives til 0.0039).
