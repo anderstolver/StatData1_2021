@@ -36,6 +36,7 @@ navbar:
         - text: "25/10-2021"
           href: slides/sd1_forel211025_long.pdf
         - text: "27/10-2021"
+          href: slides/sd1_forel211027_long.pdf
         - text: "1/11-2021"
     - text: "R"
       href: R.html

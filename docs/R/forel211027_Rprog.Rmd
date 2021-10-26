@@ -1,0 +1,153 @@
+---
+title: 'StatData1: forel211027'
+author: "Anders Tolver"
+output:   
+  html_document:
+    theme: sandstone
+    toc: true
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+
+***
+
+# Mendels ærteforsøg
+
+Ærter er blevet klassificeret efter farve (gul/grøn) og form (round/wrinkled). Se yderligere beskrivelse i lærebogens eksempel 12.1. Ifølge Mendels arvelighedslære bør fordelingen af antal på de fire grupper være i forholdet 9:3:3:1. Dette kan testes ved et Goodness-of-fit test (da: Test for specifikke sandsynligheder). 
+
+## Test udført med `chisq.test`
+
+Indtastning af data og test kan udføre med `chisq.test`.
+
+```{r}
+chisq.test(c(315,108,101,32), p=c(9,3,3,1)/16)
+```
+
+## Manuelle beregninger af teststørrelse og p-værdi
+
+Indtastning af data/antalstabel og beregning af forventede antal under nulhypotesen. Husk, at der er n = 556 observationer i datasættet.
+
+* `obs`: er den observerede vektor af antal i de forskellige grupper
+* `p0`: er sandsynligheden for at havne i hver af de 4 grupper, hvis nulhypotesen er sand
+* `556*p0`: er det forventede antal i hver gruppe, hvis man indsamler data fra 556 ærter (og nulhypotesen er sand)
+
+```{r}
+obs <- c(315,108,101,32)
+obs
+p0 <- c(9,3,3,1)/16
+forv <- 556*p0
+forv
+```
+
+Beregning af teststørrelse ud fra observerede antal og forventede antal under hypotesen.
+
+```{r}
+X2 <- sum((obs-forv)^2/forv)
+X2
+```
+
+Teststørrelsen omregning til en p-værdi ved opslag i en *tabel* over $\chi^2$-fordelingen med $k-1 = 4-1 = 3$ frihedsgrader. Her betegner k antallet af grupper.
+
+```{r}
+1-pchisq(0.47, df=3)
+```
+
+
+***
+
+
+# Kastrering (af mus) og diabetes
+
+## Beskrivelse af data og modelantagelser
+
+Eksemplet blev første gang diskuteret ved forelæsningen d. 25/10-2021 på Statistisk Dataanalyse 1
+
+* Vi betragter data fra 100 mus, som blev tilfældigt inddelt i to lige store grupper. 
+* Den ene gruppe mus blev kastreret dagen efter fødsel; den anden gruppe mus blev ikke kastreret
+* Efter 112 dage undersøgte man om musene havde udviklet diabetes
+
+Vi lader 
+
+* Y være antallet af kastrerede mus, som udvikler diabetes
+* X være antallet af ikke-kastrerede mus, som udvikler diabetes
+
+Vi antager at
+
+* Y er bin(50, p), hvor p er (den ukendte) sandsynlighed for at en tilfældigt valgt kastreret mus udvikler diabetes
+* X er bin(50, q), hvor q er (den ukendte) sandsynlighed for at en tilfældigt valgt ikke-kastreret mus udvikler diabetes
+
+Vi interesserer os for
+
+* estimat og konfidensinterval for forskellen p - q
+* test for hypotesen $H_0: p = q$
+
+Vi præsenterer nedenfor to metoder (i R) til at teste nulhypotesen
+
+* `chisq.test`
+* `prop.test`
+
+## Test med `chisq.test`
+
+Først indlæses data og det checkes om tabellen er korrekt. Bemærk at tallene indlæses søjlevis.
+
+Vi ønsker at teste hypotesen om sandsynligheden for diabetes er ens i de to grupper, dvs. i de to rækker.
+
+```{r}
+diabetes <- matrix(c(26,12,24,38), 2,2)
+diabetes
+```
+
+
+For en 2x2 tabel laver `chisq.test` som default en kontinuitetskorrektion. Hvis vi ikke vil have det, skal vi bruge optionen `correct=FALSE`. Ved forelæsningerne snakker vi kun om versionen uden kontinuitetskorrektion (-se dog slide 44-45 fra 27/10-2021).
+
+```{r}
+chisq.test(diabetes, correct=FALSE)
+chisq.test(diabetes)
+```
+
+p-værdien bliver hhv. 0.0039 og 0.0074, så hypotesen forkastes. Der er forskel på sandsynlighederne; risikoen er størst for kastrerede mus.
+
+**Beregning af teststørrelse ved håndkraft:** Vi kan nemt få de forventede værdier, som nu selv er en tabel (eller en matrix). Bemærk at de forventede værdier er ens med og uden kontinuitetskorrektion; forskellen ligger i hvordan de bruges i beregningen af teststørrelsen.
+ 
+Nedenfor vises, hvordan man udtrækker de forventede værdier og beregner teststørrelsen manuelt (men det er der naturligvis normalt ingen grund til at gøre, når vi kan bruge R til det)
+
+```{r}
+expected_table <- chisq.test(diabetes)$expected
+expected_table
+
+obs_table <- diabetes
+obs_table
+
+### manuel beregning af teststørrelse
+X2 <- sum((obs_table - expected_table)^2 / expected_table) 
+X2
+```
+
+Vi genkender teststørrelsen på `r X2` fra R outputtet lavet med `chisq.test` (uden kontinuitetskorrektion).
+
+## Test med `prop.test`
+
+Faktisk kan vi også bruge `prop.test`, når der kun er to søjler i tabellen. I mandags brugte vi `prop.test` til at lave et konfidensinterval for forskellen mellem to binomialsandsynligheder, men den laver også
+testet - og det er det præcis det samme som `chisq.test`, så nu ved vi altså faktisk hvordan p-værdien
+kom frem med `prop.test`. Vi kan lave testet med og uden kontinuitetskorrektion.
+
+```{r}
+prop.test(c(26,12), c(50,50), correct=FALSE)
+prop.test(c(26,12), c(50,50))
+```
+
+Vær dog opmærksom på følgende:
+
+* Testene udført med `chisq.test` og `prop.test` er altså identiske - men derudover giver de to funktioner forskellig ekstra information (forventede værdier hhv. konfidensinterval).
+
+* Bemærk at data skal indtastes på forskellig måde afhængig af om man bruger `chisq.test` og `prop.test`.
+
+
+***
+
+
