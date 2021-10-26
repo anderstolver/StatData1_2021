@@ -150,4 +150,77 @@ Vær dog opmærksom på følgende:
 
 ***
 
+# Forventning til StatData1 og forventning til eksamenskarakter
+
+## Beskrivelse af data
+
+Ved forelæsningen i Statistisk Dataanalyse 1 d. 8/9-2021 blev der indsamlet diverse informationer omkring nogle af de studerende, som var tilstede ved forelæsningen. 
+
+Nedenfor fokuserer vi på svarene på følgende spørgsmål
+
+* Glæder du dig til kurset Statistisk Dataanalyse 1? (Ja/Nej)
+
+* Giv et realitisk bud på din karakter ved eksamen i Statistisk Dataanalyse 1 (her grupperet: 00-4, 7, 10-12)
+
+Disse data kan opsummeres i følgende antalstabel. Bemærk hvordan man kan bruge `rownames()` og `colnames()` til at navngive søjler og rækker i en antalstabel.
+
+```{r}
+sd1tabel <- matrix(c(21, 28, 62, 30, 28, 4), 2, 3)
+sd1tabel
+rownames(sd1tabel) <- c("Ja", "Nej")
+colnames(sd1tabel) <- c("00-4", "7", "10-12")
+sd1tabel
+```
+Vi ønsker at teste hypotesen om, at svarene på de to spørgsmål er uafhængige af hinanden. Se mere på dagens forelæsningsslides for detaljer omkring, hvordan man kan formulere denne hypotese matematisk.
+
+## Test for uafhængighed
+
+Bemærk at data ovenfor er indlæst som en matrix (kaldet `sd1tabel`), denne gang som en 2 x 3 matrix. Du kan også selvom indtaste datasættet *søjlevis* som beskrevet på slides til dagens forelæsning. Check altid at tabellen/matricen er blevet som den skal være.
+
+
+Dernæst bruges `chisq.test`. Tabellen er større end 2x2, så der er ingen mulighed for at lave kontinuitetskorrektion.
+
+```{r}
+chisq.test(sd1tabel, correct = FALSE)
+```
+
+Vi konkluderer at  hypotesen om at de to inddelingskriterier er uafhængige forkastes ($\chi^2 = 17.669$, p stort set lig med 0).
+
+Til sidst ser vi også de forventede værdier, så vi kan se hvor forskellene mellem observerede og forventede
+er store. Dette er særlig nyttigt hvis nulhypotesen forkastes, fordi denne tabel giver indtryk af, hvor eventuelle afvigelser modeller data og nulhypotesen skal findes.
+
+```{r warning = F}
+chisq.test(sd1tabel)$expected
+```
+
+**Konklusion:** Det virker især til, at studerende som forventer at få en høj karakter til eksamen er mere tilbøjelige til at have en positiv forventning til kurset StatData1 som sådan. Personligt kunne jeg da godt ønske mig, at glæde/forventningen om at lære noget nyt var uafhængig af (forventninger til) eksamenskarakteren. 
+
+**Simulering af p-værdi ved tynde tabeller:** Man kan komme ud for, at `chisq.test` giver en advarsel (`Warning`), hvis man forsøger at udføre et test på en såkaldt *tynd tabel*, hvor der er få observationer i nogle af cellerne. Nedenfor gives et eksempel, hvor dette er tilfældet. For at opnå dette benyttes en opgørelse hvor alle karaktertrin på skalaen optræder i antalstabellen.
+
+```{r}
+new_sd1tabel <- matrix(c(0, 1, 5, 7, 16, 20, 62, 30, 23, 2, 5, 2), 2, 6)
+new_sd1tabel
+rownames(new_sd1tabel) <- c("Ja", "Nej")
+colnames(new_sd1tabel) <- c("00 eller -3", "2", "4", "7", "10", "12")
+new_sd1tabel
+chisq.test(new_sd1tabel)
+```
+
+Når vi bruger `chisq.test`, får vi en p-værdi på 0.001536, men vi får også en advarsel (`Warning`) om at $\chi^2$- approksimationen er tvivlsom. Det er fordi nogle af de forventede værdier er mindre end 5 (-se tabel nedenfor). Vi er derfor ikke ganske sikre på validiteten af p-værdien.
+
+```{r}
+chisq.test(new_sd1tabel)$expected
+```
+
+En mulighed i den situation er at simulere p-værdien. Dette opnås ved at bruge optionen
+`simulate.p.value` og angive hvor mange simulerede datatabeller R skal lave. Vi bruger 10000. 
+
+Så får vi en p-værdi på omkring 0.0008. Bemærk at vi ikke får præcis det samme hver gang, medmindre vi som i R koden vælger et fast `seed` (her vha. `set.seed(2019)`)
+
+```{r}
+set.seed(2019)
+chisq.test(new_sd1tabel, simulate.p.value = TRUE, B=10000)
+```
+
+p-værdierne fra de to forskellige metoder er ret ens (0.001536 vs cirka 0.0010), så vi får samme konklusion.
 

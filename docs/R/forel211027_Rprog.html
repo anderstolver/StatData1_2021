@@ -194,6 +194,11 @@ pre code {
 <li><a href="#test-med-chisq.test">Test med <code>chisq.test</code></a></li>
 <li><a href="#test-med-prop.test">Test med <code>prop.test</code></a></li>
 </ul></li>
+<li><a href="#forventning-til-statdata1-og-forventning-til-eksamenskarakter">Forventning til StatData1 og forventning til eksamenskarakter</a>
+<ul>
+<li><a href="#beskrivelse-af-data">Beskrivelse af data</a></li>
+<li><a href="#test-for-uafhængighed">Test for uafhængighed</a></li>
+</ul></li>
 </ul>
 </div>
 
@@ -342,6 +347,85 @@ X2</code></pre>
 <li><p>Bemærk at data skal indtastes på forskellig måde afhængig af om man bruger <code>chisq.test</code> og <code>prop.test</code>.</p></li>
 </ul>
 <hr />
+</div>
+</div>
+<div id="forventning-til-statdata1-og-forventning-til-eksamenskarakter" class="section level1">
+<h1>Forventning til StatData1 og forventning til eksamenskarakter</h1>
+<div id="beskrivelse-af-data" class="section level2">
+<h2>Beskrivelse af data</h2>
+<p>Ved forelæsningen i Statistisk Dataanalyse 1 d. 8/9-2021 blev der indsamlet diverse informationer omkring nogle af de studerende, som var tilstede ved forelæsningen.</p>
+<p>Nedenfor fokuserer vi på svarene på følgende spørgsmål</p>
+<ul>
+<li><p>Glæder du dig til kurset Statistisk Dataanalyse 1? (Ja/Nej)</p></li>
+<li><p>Giv et realitisk bud på din karakter ved eksamen i Statistisk Dataanalyse 1 (her grupperet: 00-4, 7, 10-12)</p></li>
+</ul>
+<p>Disse data kan opsummeres i følgende antalstabel. Bemærk hvordan man kan bruge <code>rownames()</code> og <code>colnames()</code> til at navngive søjler og rækker i en antalstabel.</p>
+<pre class="r"><code>sd1tabel &lt;- matrix(c(21, 28, 62, 30, 28, 4), 2, 3)
+sd1tabel</code></pre>
+<pre><code>##      [,1] [,2] [,3]
+## [1,]   21   62   28
+## [2,]   28   30    4</code></pre>
+<pre class="r"><code>rownames(sd1tabel) &lt;- c(&quot;Ja&quot;, &quot;Nej&quot;)
+colnames(sd1tabel) &lt;- c(&quot;00-4&quot;, &quot;7&quot;, &quot;10-12&quot;)
+sd1tabel</code></pre>
+<pre><code>##     00-4  7 10-12
+## Ja    21 62    28
+## Nej   28 30     4</code></pre>
+<p>Vi ønsker at teste hypotesen om, at svarene på de to spørgsmål er uafhængige af hinanden. Se mere på dagens forelæsningsslides for detaljer omkring, hvordan man kan formulere denne hypotese matematisk.</p>
+</div>
+<div id="test-for-uafhængighed" class="section level2">
+<h2>Test for uafhængighed</h2>
+<p>Bemærk at data ovenfor er indlæst som en matrix (kaldet <code>sd1tabel</code>), denne gang som en 2 x 3 matrix. Du kan også selvom indtaste datasættet <em>søjlevis</em> som beskrevet på slides til dagens forelæsning. Check altid at tabellen/matricen er blevet som den skal være.</p>
+<p>Dernæst bruges <code>chisq.test</code>. Tabellen er større end 2x2, så der er ingen mulighed for at lave kontinuitetskorrektion.</p>
+<pre class="r"><code>chisq.test(sd1tabel, correct = FALSE)</code></pre>
+<pre><code>## 
+##  Pearson&#39;s Chi-squared test
+## 
+## data:  sd1tabel
+## X-squared = 17.669, df = 2, p-value = 0.0001456</code></pre>
+<p>Vi konkluderer at hypotesen om at de to inddelingskriterier er uafhængige forkastes (<span class="math inline">\(\chi^2 = 17.669\)</span>, p stort set lig med 0).</p>
+<p>Til sidst ser vi også de forventede værdier, så vi kan se hvor forskellene mellem observerede og forventede er store. Dette er særlig nyttigt hvis nulhypotesen forkastes, fordi denne tabel giver indtryk af, hvor eventuelle afvigelser modeller data og nulhypotesen skal findes.</p>
+<pre class="r"><code>chisq.test(sd1tabel)$expected</code></pre>
+<pre><code>##         00-4       7    10-12
+## Ja  31.43931 59.0289 20.53179
+## Nej 17.56069 32.9711 11.46821</code></pre>
+<p><strong>Konklusion:</strong> Det virker især til, at studerende som forventer at få en høj karakter til eksamen er mere tilbøjelige til at have en positiv forventning til kurset StatData1 som sådan. Personligt kunne jeg da godt ønske mig, at glæde/forventningen om at lære noget nyt var uafhængig af (forventninger til) eksamenskarakteren.</p>
+<p><strong>Simulering af p-værdi ved tynde tabeller:</strong> Man kan komme ud for, at <code>chisq.test</code> giver en advarsel (<code>Warning</code>), hvis man forsøger at udføre et test på en såkaldt <em>tynd tabel</em>, hvor der er få observationer i nogle af cellerne. Nedenfor gives et eksempel, hvor dette er tilfældet. For at opnå dette benyttes en opgørelse hvor alle karaktertrin på skalaen optræder i antalstabellen.</p>
+<pre class="r"><code>new_sd1tabel &lt;- matrix(c(0, 1, 5, 7, 16, 20, 62, 30, 23, 2, 5, 2), 2, 6)
+new_sd1tabel</code></pre>
+<pre><code>##      [,1] [,2] [,3] [,4] [,5] [,6]
+## [1,]    0    5   16   62   23    5
+## [2,]    1    7   20   30    2    2</code></pre>
+<pre class="r"><code>rownames(new_sd1tabel) &lt;- c(&quot;Ja&quot;, &quot;Nej&quot;)
+colnames(new_sd1tabel) &lt;- c(&quot;00 eller -3&quot;, &quot;2&quot;, &quot;4&quot;, &quot;7&quot;, &quot;10&quot;, &quot;12&quot;)
+new_sd1tabel</code></pre>
+<pre><code>##     00 eller -3 2  4  7 10 12
+## Ja            0 5 16 62 23  5
+## Nej           1 7 20 30  2  2</code></pre>
+<pre class="r"><code>chisq.test(new_sd1tabel)</code></pre>
+<pre><code>## Warning in chisq.test(new_sd1tabel): Chi-squared approximation may be incorrect</code></pre>
+<pre><code>## 
+##  Pearson&#39;s Chi-squared test
+## 
+## data:  new_sd1tabel
+## X-squared = 19.521, df = 5, p-value = 0.001536</code></pre>
+<p>Når vi bruger <code>chisq.test</code>, får vi en p-værdi på 0.001536, men vi får også en advarsel (<code>Warning</code>) om at <span class="math inline">\(\chi^2\)</span>- approksimationen er tvivlsom. Det er fordi nogle af de forventede værdier er mindre end 5 (-se tabel nedenfor). Vi er derfor ikke ganske sikre på validiteten af p-værdien.</p>
+<pre class="r"><code>chisq.test(new_sd1tabel)$expected</code></pre>
+<pre><code>## Warning in chisq.test(new_sd1tabel): Chi-squared approximation may be incorrect</code></pre>
+<pre><code>##     00 eller -3        2        4       7        10       12
+## Ja    0.6416185 7.699422 23.09827 59.0289 16.040462 4.491329
+## Nej   0.3583815 4.300578 12.90173 32.9711  8.959538 2.508671</code></pre>
+<p>En mulighed i den situation er at simulere p-værdien. Dette opnås ved at bruge optionen <code>simulate.p.value</code> og angive hvor mange simulerede datatabeller R skal lave. Vi bruger 10000.</p>
+<p>Så får vi en p-værdi på omkring 0.0008. Bemærk at vi ikke får præcis det samme hver gang, medmindre vi som i R koden vælger et fast <code>seed</code> (her vha. <code>set.seed(2019)</code>)</p>
+<pre class="r"><code>set.seed(2019)
+chisq.test(new_sd1tabel, simulate.p.value = TRUE, B=10000)</code></pre>
+<pre><code>## 
+##  Pearson&#39;s Chi-squared test with simulated p-value (based on 10000
+##  replicates)
+## 
+## data:  new_sd1tabel
+## X-squared = 19.521, df = NA, p-value = 0.0009999</code></pre>
+<p>p-værdierne fra de to forskellige metoder er ret ens (0.001536 vs cirka 0.0010), så vi får samme konklusion.</p>
 </div>
 </div>
 
