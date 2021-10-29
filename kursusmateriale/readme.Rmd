@@ -1,0 +1,19 @@
+---
+title: "Sådan får du en (næsten) komplet kopi af kursushjemmesiden"
+output: html_document
+---
+
+Under den skriftlige eksamen skal du arbejde på din egen computer, men du må ikke have forbindelse til internettet. Det betyder i princippet, at hvis du vil have adgang til materiale på kursushjemmesiden, så skal du huske at kopiere materialet ned på din computer FØR eksamen. 
+
+Det kan være svært at huske at få kopieret alle relevante filer, og det kan let blive en udfordring hvordan du bedst kan organisere filerne på din computer. Jeg vil gerne have feedback på, om følgende fungerer for jer
+
+* Øverst i topmenuen på kursushjemmesiden har jeg lavet et link med titlen `Kursusmateriale (zip)`. Klik på dette link!
+* Linket fører til en mappe med to typer af filer
+    - 1) en html-fil ved navn `readme.html` som er identisk med den fil du netop nu sidder og læser
+    - 2) zip-filer som indeholder en kopi af materialet på kursushjemmesiden (filnavnet angiver datoen hvor kopien er lavet)
+* Klik på/download den nyeste zip-fil på din computer.
+* Pak zip-filen ud på din computer. Den udpakkede mappe får navnet `docs`
+* Mappen `docs` på din egen computer indeholder nu i princippet en kopi af alt materialet på kursushjemmesiden (som altså nu vil kunne tilgås selvom du lukker for netforbindelsen).
+* **Fed feature:** Hvis du i mappen `docs` finder og åbner filen `index.html` i en browser (fx. Chrome), så vil du kunne navigere rundt i materialet på kursushjemmesiden (også selvom du lukker ned for netforbindelsen).
+
+**Det er en helt ekstraordinær service at jeg har forsøgt at gøre kursusmaterialet tilgængeligt for jer på en smart og overskuelig måde. Jeg kan ikke garantere, at det virker på alle typer af computere og i alle browsere. Du kan jo sagtens gemme materialet på din computer på gammeldags facon, og hvis du allerede har gjort dette, så er der næppe nogen grund til også at afprøve min løsning ovenfor.**
