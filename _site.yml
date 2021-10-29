@@ -48,3 +48,5 @@ navbar:
         href: https://github.com/anderstolver/StatData1_2021/tree/main/docs/opgaver
       - text: "Gamle eksamensopgaver"
         href: https://github.com/anderstolver/StatData1_2021/tree/main/docs/eksamensopgaver
+    - text: "Kursusmateriale (zip)"
+      href: https://github.com/anderstolver/StatData1_2021/tree/main/docs/kursusmateriale
