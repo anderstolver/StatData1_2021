@@ -1,0 +1,478 @@
+---
+title: 'StatData1: forel211101 (foreløbig version)'
+author: "Anders Tolver"
+output:   
+  html_document:
+    theme: sandstone
+    toc: true
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(readxl)
+library(tidyverse)
+```
+
+# Formålet med dette dokument
+
+Formålet med dette dokument er at fremhæve nogle af de centrale statistiske modeller og eksempler, som har været diskuteret i forbindelse med undervisningen i Statistisk Dataanalyse 1 i 2021. Nederst i dokumentet findes en kort opsummering af [resultaterne fra studenterevalueringerne](#evaluering)
+
+Det er vigtigt, at I opnår erfaring med at kunne afkode, hvilken statistisk metode / modelklasse, som er velegnet til at besvare opgaver / delspørgsmål som knytter sig til et konkret datasæt. Hertil kan [modelvalgsdiagrammet](../notater/modeller.pdf) være særlig velegnet. Start med at identificere og afgøre om *responsvariablen* er en kvantitativ / kontinuert variabel eller om der er tale om en antalstabel. Fokuser dernæst på at finde / identificere antallet og datatypen for eventuelle forklarende variable.
+
+Når du har identificeret den model / del af pensum, som er relevant for at besvare en konkret delopgave, så kan du med fordel finde et R-program, der kan hjælpe dig med at huske, hvordan man skriver R-koden, og hvordan man fortolker output. Oversigten nedenfor i dette dokument forsøger at hjælpe dig til at finde og træne centrale begreber og teknikker vha. opgaver og eksempler fra undervisningen i kursusuge 1-7. Vær dog opmærksom på, at jeg ikke kan afgøre, hvor I hver især har jeres største udfordringer. Det anbefales at supplere dette dokument med egne kommentarer, eller at lave en tilsvarende oversigt, som er tilpasset dine personlige udfordringer. 
+
+***
+
+# Parrede vs. ikke-parrede stikprøver
+
+## Hvornår 
+
+Hvis vi måler flere gange på de *samme individer* og interesserer os for forskellen.
+
+## Hvordan
+
+Udregn forskellene og opfat data som en enkelt stikprøve af forskelle. Brug formlen for en enkelt stikprøve til at udregne konfidensinterval.
+
+Eksemplet om halthed af heste fra R-programmet d. 22/9-2021 viser 3 metoder, hvorpå man kan få R til at udregne estimater / konfidensintervaller.
+
+**Data:** hentes fra `isdals` R-pakken.
+
+```{r}
+library(isdals)
+data(lameness)
+lameness
+```
+
+**Metode 0:** brug formel for en enkelt stikprøve til at beregnes konfidensinterval for middelværdien af forskellene.
+
+```{r}
+lameness$diff <- lameness$lame - lameness$healthy
+head(lameness)
+s <- sd(lameness$diff)
+KI_up <- mean(lameness$diff) + qt(0.975, 8 - 1) * s / sqrt(8)
+KI_up
+KI_low <- mean(lameness$diff) - qt(0.975, 8 - 1) * s / sqrt(8)
+KI_low
+```
+
+**Metode 1:** Få R til at lave KI for middelværdien af forskellene ...
+
+**Bemærk:** Når man (som nedenfor) kun skriver `~ 1` i kaldet til `lm()`, så vil R estimere en model svarende til enstikprøve-problemet. Dvs. en model, hvor alle observationerne har den samme middelværdi.
+
+```{r}
+one_sample_mod <- lm(lame - healthy ~ 1, data = lameness)
+summary(one_sample_mod)
+confint(one_sample_mod)
+```
+**Metode 2/3:** Brug `t.test()`
+
+```{r}
+t.test(lameness$diff)
+t.test(lameness$lame, lameness$healthy, paired=TRUE)
+```
+## Eksempler på opgaver
+
+Udvalgte delspørgsmål fra 
+
+* Januar 2018, opgave 3
+* November 2019, opgave 2.
+* Februar 2021, opgave 1.1.
+
+***
+
+# Ensidet variansanalyse
+
+## Hvornår
+
+Kvantitativ / kontinuert responsvariabel og en kategorisk forklarende variabel.
+
+## Hvordan
+
+R-programmet fra 20/9-2021 kommer godt rundt i emnet. Du bør fx. arbejde med at lære/forstå følgende:
+
+* kunne aflæse output med og uden intercept
+* kunne teste hypotesen om, at middelværdien er ens i alle grupper (ved et F-test)
+* i nogle eksempler: teste en ensidet ANOVA mod en lineær regressionsmodel, hvis den forklarende variable kan opfattes både som et kategorisk og en numerisk variabel (se R-programmet fra 4/10-2021 / Opgave HS 22)
+* kunne fortolke output, hvis analysen foretages med en log-transformeret variabel som respons
+
+**Aflæsning af output:** Samme model forskellig output/parametrisering (eksempel med gødning og antibiotika)
+```{r}
+data(antibio)
+### Model, parametrisering med de seks gennemsnit
+model1 <- lm(org ~ type - 1, data=antibio)
+summary(model1)
+### Model med Alfacyp som referencegruppe
+model2 <- lm(org ~ type, data=antibio)
+summary(model2)
+### Model med Control som referencegruppe
+antibio$type <- relevel(antibio$type, ref = "Control")
+model3 <- lm(org ~ type, data=antibio)
+summary(model3)
+```
+
+
+**F-test:** Her vises en metode til at få R til at lave F-testet for, om middelværdien kan antages at være ens i alle grupper (her givet ved variablen `type`). Helt ok, hvis du har andre metoder til at producere F-teststørrelsen på.
+
+```{r}
+### Test for ens middelværdi i alle grupper kan laves som følger ...
+nulmodel <- lm(org ~ 1, data=antibio)
+anova(nulmodel, model1)
+```
+**Test af lineær regression mod ensidet ANOVA:** For eksemplet med elektriske ål fra R-programmet til 4/10-2021 er der flere målinger af frekvensen (=respons) for hver vandtemperatur. Derfor kan man ved et F-test undersøge om middelværdien af responsen afhænger lineær af vandtempaturen ved at sammenligne en lineær regressionsmodel mod modellen, hvor vandtemperaturen inddrages som en faktor i modellen.
+
+```{r}
+### Eksempel med elektriske ål
+library(isdals)
+data(eels)
+head(eels)
+eels <- transform(eels, tempFac = factor(temp))
+ensidet <- lm(freq ~ tempFac, data=eels)
+linreg <- lm(freq ~ temp, data=eels)
+anova(linreg, ensidet)
+```
+
+**Hvad er det egentlig vi konkluderer på baggrund af testet?** Den lineære regressionsmodel skal opfattes som en mere restriktiv model end den ensidede ANOVA. Dette skyldes at en lineær regressionsmodel her tvinger middelværdierne hørende til de 7 forskellige vandtemperaturer, som er afprøvet i forsøget, til at være givet som en lineær funktion af vandtemperaturen. Vores nulhypotese er den mest restriktive model (her: den lineære regressionsmodel), så når vi får en stor p-værdi på 0.6292 kan vi ikke forkaste nulhypotesen. Der er mao. *ikke* på baggrund af data grund til at afvise, at middelværdien af frekvensen af de udsendte signaler for ålene kunne være givet ved en lineær funktion af vandtemperaturen.
+
+**Log-transformeret respons:** Regn opgave 1 fra eksamen i November 2019. Det vigtigste budskab er, at fortolkningen af estimaterne udtaler sig om medianer, når de regnes tilbage til oprindelig skala vha. eksponentialfunktionen.
+
+**Tænk eventuelt over følgende spørgsmål:**
+
+Med udgangspunkt i eksemplet med antibiotika og gødning ovenfor:
+
+* hvordan kan man teste om middelværdien af responsen (dvs. indholdet af organisk stof) er ens for `Control`-gruppen og for `Enroflox`-gruppen?
+
+**Svar:** Hvis man kigger på output under `summary(model3)` ovenfor, hvor gruppen `Control` er valgt som reference, så kan svaret umiddelbart aflæses. Forskellen melllem middelværdien i `Enroflox`- og `Control`-gruppen estimeres til 0.10667, og i samme linje aflæses t-teststørrelsen 1.518 og den tilhørende p-værdi på 0.140338. Benyttes et 5 % - signifikans niveau, så kan vi altså *ikke* afvise, at forskellen mellem middelværdien i `Enroflox` og `Control`-grupperne kunne være lig med 0.
+
+* hvordan kan man teste om middelværdien af responsen (dvs. indholdet af organisk stof) er ens for alle antibiotikagrupper (dvs bortset fra `Control`-gruppen)?
+
+**Svar:** Dette test kan udføres som et F-test. Alle detaljerne findes i R-programmet til forelæsningen d. 27/9-2021.
+
+* hvad er antallet af frihedsgrader, og hvordan er dette antal fremkommet?
+
+**Svar:** For en ensidet ANOVA er antallet af frihedsgrader (df = degrees of freedom) givet som antallet af observationer (her: n = 34) minus antallet af grupper (her: k = 6). Formlen er: df = n - k = 34 - 6 = 28. For alle andre modeller fittet med `lm()`-funktionen i R, der gælder samme formel df = n - k, hvor man kan finde k ved at optælle antallet af estimater der optræder under `coefficients`, når man ser på et `summary()` af modellen. 
+
+## Eksempler på opgaver
+
+Der er rigtig mange tidligere eksamensopgaver om ensidet ANOVA fx. 
+
+* November 2019, opgave 1 
+* Januar 2020, opgave 1
+* November 2020, opgave 1
+* November 2020, opgave 3.5 (quiz-opgave)
+
+***
+
+# Lineær regression
+
+## Hvornår
+
+Kvantitativ / kontinuert responsvariabel og en kvantitativ / kontinuert forklarende variabel.
+
+## Hvordan
+
+R-programmet fra 20/9-2021 viser, hvordan man fitter og aflæser estimater fra modellen, samt hvordan man konstruerer et konfidensinterval for et punkt på regressionslinjen.
+
+**Sammenhæng mellem hjertevægt og kropsvægt for katte:** Forstår du både R-kode og R-output?
+
+```{r warning = FALSE, message = FALSE}
+library(MASS)
+data(cats)
+linreg <- lm(Hwt ~ Bwt, data = cats)
+summary(linreg)
+```
+Et 95 % - konfidensinterval hørende til en kropsvægt på `Bwt = 2.5` kg vil med 95 % sandsynlighed indeholde *gennemsnittet af (uendelig mange) nye observationer* af hjertevægten, for katte med en kropsvægt på 2.5 kg.
+
+```{r}
+newData = data.frame(Bwt = 2.5)
+predict(linreg, newData, interval = "confidence", level = 0.95)
+```
+
+**Spørgsmål til R-kode ovenfor:** Er der en grund til, at du skriver `newData = data.frame(Bwt = 2.5)` i stedet for `newData <- data.frame(Bwt = 2.5)` i R-koden til beregning af konfidensintervallet ovenfor? ATs svar:  Nej, jeg anbefaler at man bruger `<-` i stedet for `=`. Dette er også gjort ved beregning af prædiktionsintervallet nedenfor.
+
+**Modelkontrol og prædiktionsintervaller:**
+
+R-programmet fra 29/9-2021 gennemgår modelkontrol og prædiktionsintervaller for en lineær regressionsmodel. 
+
+Hvad bør man se efter og kommentere på baggrund af et residualplot og et QQ-plot?
+
+```{r}
+### Residualplot med vandret linie i 0
+par(mfrow = c(1, 2)) ### arrangerer de to figurer ved siden af hinanden
+plot(fitted(linreg), rstandard(linreg), pch = 16, xlab = "Predicted values", ylab = "Standardized residuals"
+     , main = "Cats data")
+abline(h = 0, lty = 2)
+### QQ-plot 0/1-linien
+qqnorm(rstandard(linreg), pch = 16, main = "Cats Data")
+abline(0, 1, lwd = 2, col = "red")
+```
+
+Et 95 % - prædiktionsinterval hørende til en kropsvægt på `Bwt = 2.5` kg vil med 95 % sandsynlighed indeholde *en enkelt ny observation* af hjertevægten, for en kat med en kropsvægt på 2.5 kg.
+
+```{r}
+newData <- data.frame(Bwt = 2.5)
+### praediktion og praediktionsinterval
+predict(linreg, newData, interval = "p")
+```
+
+**Tænk gerne over følgende:**
+
+* hvordan man tester om der er sammenhæng mellem respons og forklarende variabel i lineær regression (= om hældningen er nul!)
+
+**Svar:** Når man kigger på outputtet fra `summary(linreg)` ovenfor, så kan man direkte finde et t-test for hypotesen om, at hældningen er nul (i datalinjen hørende til `Bwt`).
+
+* hvordan man tester om hældningen har en ganske bestemt værdi (R-program fra 22/9-2021)
+
+**Svar:** Her kan du bruge den generelle formel for, hvordan man kan udføre et t-test, når man kender både standard error (SE) på estimatet og antallet af frihedsgrader. Se detaljerne i R-programmet til 22/9-2021.
+
+* hvordan man tester en lineær regressionsmodel mod fx. en kvadratisk regressionsmodel (R-program fra 4/10-2021)
+
+**Svar:** Denne teknik er vigtig at kende til. Man kan altid teste en lineær regressionsmodel mod en mere fleksibel model (fx. en kvadratisk model). Det er *kun* hvis man har flere målinger for hver værdi af den forklarende variable, at man kan teste en lineær regressionsmodel mod en ensidet ANOVA (som vi gjorde ovenfor i eksemplet med de elektriske ål).
+
+## Eksempler på opgaver
+
+* November 2018, Opgave 2.1
+* Januar 2019, Opgave 2.1-2.4 
+* November 2020, Opgave 2
+* Opgaverne fra januar 2019 og November 2020 er ekstra udfordrende, fordi både respons og forklarende variabel indgår log-transformerede i den lineære regressionsmodel. 
+
+***
+
+# Multiple lineær regression
+
+## Hvornår
+
+Kvantitativ / kontinuert responsvariabel og (mindst) to kvantitative / kontinuerte forklarende variable.
+
+## Hvordan
+
+R-programmet fra 6/10-2021 om sammenhæng mellem volumen og højde+diameter af kirsebærtræer indeholder flere eksempler på multiple lineære regressionsmodeller. 
+
+**Kirsebærtræer:** Kan du opskrive den tilhørende statistiske model og fortolke output nedenfor?
+```{r}
+library(isdals)
+data(trees)
+multipel1 <- lm(Volume ~ Height + Girth, data = trees)
+summary(multipel1)
+```
+
+Den statistiske model udtrykkes som
+
+$$
+V_i = \alpha + \beta \cdot H_i + \gamma \cdot G_i + e_i,
+$$
+hvor restleddene $e_i$ er uafhængige og normalfordelte $\sim N(0, \sigma^2).$
+Estimatet for parameteren hørende til variablen `Height` (H) er 0.3393. Fortolkningen er at det forventede volumen (V) øges med 0.3393 enheder, når højden (H) øget med 1 enhed.
+
+**Kirsebærtræer (log-transformation):** Kan du opskrive den tilhørende statistiske model og fortolke output nedenfor?
+```{r}
+multipel2 <- lm(log(Volume) ~ log(Height) + log(Girth)
+, data = trees)
+summary(multipel2)
+```
+
+Der findes en detaljeret analyse af dette eksempel i R-programmet fra 6/10-2021. Selvom den matematiske fortolkning af modellen her (hvor både respons og forklarene variable log-transformeres) er lidt mere kompleks, så giver eksemplet et godt indblik i fleksibiliteten af klassen af multiple lineære regressionsmodeller.
+
+## Eksempler på opgaver
+
+* November 2018, opgave 2 
+* januar 2019, opgave 2.5 (afleveringsopgave 2)
+
+***
+
+# Tosidet variansanalyse
+
+## Hvornår
+
+Kvantitativ / kontinuert responsvariabel og  to kategoriske forklarende variable.
+
+## Hvordan
+
+Vores hovedeksempel vedr. højder for studerende på StatData1 i 2017 søgt forklaret ved køn og studieretning (-se R-programmet fra 11/10-2021). 
+
+Du bør arbejde på at forstå følgende:
+
+* forskellen på den additive model og modellen med vekselvirkning
+* teste den additive model med modellem med vekselvirkning
+* kunne finde estimatet for middelværiden hørende til en gruppe givet som kombination af de to forklarende variable (fx. mandlige jordbrugsøkonomi-studerende) ... både for den additive model og for vekselvirkningsmodellen
+* teste om modellen kan reduceres ved at fjerne en af de to forklarende variable fra modellen (ved et F-test)
+
+**Additive model / model med vekselvirkning:** Indlæser først data fra eksamen januar 2020 opgave 2.
+
+```{r}
+pestgolf <- read.table(file = "../data/pestgolf.txt", header = T)
+head(pestgolf)
+```
+
+```{r}
+modelVeksel <- lm(Kd ~ Treat * Lokation, data = pestgolf)
+modelAdd <- lm(Kd ~ Treat + Lokation, data = pestgolf)
+```
+
+*Model med vekselvirkning:* de 6 middelværdier hørende til kombinationer af `Treat` og `Lokation` estimeres helt frit.
+
+*Additive model:* middelværdier hørende til kombinationer af `Treat` og `Lokation` tvinges til at have en *additiv struktur*. Forskellen på estimaterne hørende til `Treat = T04` og `Treat = T05` er den samme, uanset hvilken `Lokation` vi ser på. (Tænk eventuelt på eksempel med isbutik: prisen på guf er den samme uanset antallet af kugler).
+
+**Test af additiv model mod model med vekselvirkning:** Kan udføres som et F-test af additive model (=nulmodel) mod vekselvirkningsmodel (=fuld model).
+
+```{r}
+anova(modelAdd, modelVeksel)
+```
+Hypotesen (dvs. den additive model) kan ikke forkaste på et 5 % - niveau, da p-værdien er 0.0682.
+
+**Aflæse / fortolke estimaterne:** Lad os aflæse estimaterne for kombinationen `Treat =  T05, Lokation = KNY` både for den additive model og for modellen med vekselvirkning.
+
+*Model med vekselvirkning:*
+
+```{r}
+summary(modelVeksel)
+```
+Estimatet bliver: 0.848667 + 0.315000 - 0.286000 - 0.264333.
+
+*Additive model:*
+
+```{r}
+summary(modelAdd)
+```
+Estimatet bliver: 0.89411 + 0.22411 -0.41817.
+
+**Yderligere ting der kan aflæses af outputtet fra den additive model:** Vi aflæser desuden at
+
+* den estimerede forskel på sorptionen for `Treat = T05` og `Treat = T04` (indeholdt i reference/Intercept) er 0.22411
+* den estimerede forskel på sorptionen for `Lokation = HONE` og `Lokaltion = DYR` (indeholdt i reference/Intercept) er -0.46350
+* den estimerede forskel på sorptionen for `Lokation = KNY` og `Lokaltion = DYR` (indeholdt i reference/Intercept) er -0.41817
+
+**Test for effekt af `Treat`/ `Lokation`:** Test for hver af de to indgående forklarende variable bør kun foretages, hvis der ikke er vekselvirking (dvs. hvis vi ikke kan forkaste den additive model). Den additive model benyttes som *fuld model* og modellen, hvor en af de to forklarende variable fjernes benyttes som *nulmodel* i et F-test med `anova()`.
+
+*Test for effekt af `Treat`:*
+
+```{r}
+modelLokation <- lm(Kd ~ Lokation, data = pestgolf)
+anova(modelLokation, modelAdd)
+```
+Vi forkaster hypotesen om, at vi kan se bort fra `Treat`: observeret F-teststørrelse = 16.855, P-værdi = 0.001071.
+
+*Test for effekt af `Lokation`:*
+
+```{r}
+modelTreat <- lm(Kd ~ Treat, data = pestgolf)
+anova(modelTreat, modelAdd)
+```
+Vi forkaster hypotesen om, at vi kan se bort fra `Lokation`: observeret F-teststørrelse = 29.214, P-værdi = 0.000010.
+
+## Eksempler på opgaver
+
+* Januar 2019, opgave 1 kommer godt rundt i pensum her (afleveringsopgave 3)
+* Januar 2020, opgave 2 (fra kursusuge 6)
+* November 2020, opgave 3.7 (quiz-spørgsmål)
+* Februar 2021, opgave 2.4-2.5
+
+***
+
+# Blandede modeller
+
+## Hvornår
+
+Kvantitativ / kontinuert responsvariabel og  både en kategoriske og en kvantitativ / kontinuert forklarende variable.
+
+## Hvordan
+
+R-programmet fra 13/10-2021 viser, hvordan man fitter og aflæser estimaterne fra en blandet model (eksempel med løbetider på DHL-stafetten).
+
+Vær særligt opmærksom på
+
+* hvordan man opskriver modellen korrekt
+* hvordan man fortolker estimaterne fra output (igen kan man fitte modellen med og uden intercept!)
+
+**Løbetider på DHL-stafetten:** Brug tid på at lære at opskrive modellen og på at kunne fortolke estimaterne. En særlig egenskab med den *blandede model* her er, at forskellene i løbetiderne mellem de forskellige dage er ens, uanset holdsammensætningen (dvs. antal kvinder på holdet).
+
+```{r}
+data(dhl)
+dhl <- transform(dhl, time = 60*60*hours + 60*minutes + seconds)
+dhl <- transform(dhl, group = factor(women))
+head(dhl)
+model1 <- lm(time ~ day + women, data=dhl)
+summary(model1)
+```
+
+## Eksempler på opgaver
+
+* November 2019, opgave 2.3-2.5.
+* Februar 2021, opgave 1.5
+
+***
+
+# Kursusuge 7 / metoder til analyse af antalstabeller
+
+Det er essentielt at forstå, hvordan man udregner sandsynligheder i en binomialfordeling (klassisk quiz-spørgmål i multiple choice opgaver). 
+
+Desuden snakkede vi om, hvordan man 
+
+* i) estimerer og beregner konfidensintervaller for en andel (dvs. antal / total)
+* ii) tester hypoteser om at andelen har en bestemt værdi (fx. 0.5)
+* iii) sammenligner to binomialfordelinger 
+* iv) laver test for homogenitet og test for uafhængighed baseret på antalstabeller. 
+
+Der er mange emner og næppe nogen vej uden om at nærstudere slides og R-programmer fra denne uge, hvis du gerne vil være ordentlig forberedt. Husk især at øve på quiz-spørgsmål fra eksamen og quizzer i Absalon, som vedrører denne del af pensum.
+
+***
+
+# Opsummering på studenterevalueringer {#evaluering}
+
+Omkring 110 ud af 220 studerende på StatData1 valgte at udfylde kursusevalueringerne. Studienævn/ledelse på relevante institutter har adgang til jeres individuelle evalueringer og kommentarer, så alt bliver set. Nedenfor opsummeres resultaterne af multiple choice spørgsmålene i hovedtræk. Du er velkommen til at sende mig en email, hvis der er ting, som du mener ikke er med (og som du heller ikke har skrevet i dine individuelle kommentarer).
+
+Hovedtræk fra multiple choice del af evalueringsskemaet:
+
+* Ca. 90 % har arbejdet mellem 10 og 25 timer om ugen med kurset
+
+* Ca. 70 % svarer at niveauet er tilpas og 30 % at niveauet er for højt. Meget få finder niveauet for lavt eller alt for højt.
+
+* Godt 75 % finder arbejdsbyrden tilpas eller for høj (25 %). Meget få finder arbejdsbyrden for lav eller alt for høj.
+
+* Lidt delte meninger om, hvorvidt I har opnået kompetencerne i kursusmålene: helt uenig (2 %), uenig (11 %), hverken uenig eller uenig (38 %), enig (33 %), helt enig (16 %)
+
+* Godt 85 % finder at der er god sammenhæng ml. forelæsninger, øvelser m.v. Under 5 % er decideret uenige.
+
+* Ca. 75 % finder at undervisningsmaterialet var relevant. Ca. 10 % er decideret uenige i dette.
+
+* Ca. 70 % er tilfredse med skriftlig og mundtlige feedback. Knap 25 % er hverken enige eller uenige og 5 % er uenige.
+
+* Ingen finder at de har manglet adgang til nødvendige informationer om kurset.
+
+* Godt 85 % erklærer sig enige eller helt enige i at kurset har været udbytterigt. Under 5 % er uenige eller meget uenige.
+
+* 60-70 % mener at inddragelsen af digitale værktøjer har været til støtte for det faglige udbytte og at det har givet gode muligheder for kommunikation. Ca. 30 % har ingen stærke meninger om dette og få er uenige.
+
+* Blandede meninger om, hvorvidt dele af undervisningen bør være online: 25 % helt eller delvist uenige, 25 % har ingen meninger om dette, 50 % helt eller delvist enige.
+
+* Ca. 55 % har fået noget ud af at genbesøge forelæsninger som var optaget. 
+
+* Ca. 25 overvejende positive kommentarer omkring brugen af digitale værktøjer herunder
+    - tilfredshed med mulighed for at følge forelæsninger online og at se forelæsninger senere
+    - den eksterne hjemmeside
+    - opsamlingsvideoer
+    
+* Generel meget stor tilfredshed med forelæserens engagement og formidling. 
+
+Desuden en del positive kommentarer omkring:
+
+* kursets struktur
+* kursets hjemmeside
+* tilgængelighed af videoer
+* quizzer
+* R Markdown som værktøj (selvom læringskurven er stejl i starten)
+* øvelsestimer / øvelseslærere
+* mulighed for frivillige afleveringsopgaver
+* engageret og passioneret forelæser
+* forelæser virker interesseret i at hjælpe
+
+Negative kommentarer / forbedringer:
+
+* forelæseren taler for hurtigt
+* forelæseren siger nogle gange ting på et snørklet måde
+* for mange slides til forelæsningerne
+* lærebogen er svær/ubrugelig
+* for abstrakt og for meget teori ved forelæsninger (især i starten af kurset)
+* brug mere tid på enkelte R kommandoer ved forelæsninger
+* overvej brug af quizzer/polls under forelæsningerne
+* desuden en masse konstruktive kommentarer som *bringes videre* men som peger i lidt forskellige retninger og derfor ikke bliver opsummeret her. Men tak!
